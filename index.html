@@ -201,10 +201,13 @@
             width: 100%;
             font-size: 1rem;
             transition: background 0.3s;
+            font-weight: 600;
         }
 
         .buy-button:hover {
             background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
         .about {
@@ -548,7 +551,7 @@
                     <h3>xFlux 512</h3>
                     <p>Perfect for camping and outdoor activities. 512Wh capacity, multiple outlets.</p>
                     <div class="price">₹24,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 512', 24999)">Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 512', 24999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
@@ -557,7 +560,7 @@
                     <h3>xFlux 1024</h3>
                     <p>For home backup and professional use. 1024Wh capacity, pure sine wave.</p>
                     <div class="price">₹49,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 1024', 49999)">Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 1024', 49999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
@@ -566,7 +569,7 @@
                     <h3>xFlux 2048</h3>
                     <p>Maximum power for all needs. 2048Wh capacity, expandable battery.</p>
                     <div class="price">₹89,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 2048', 89999)">Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 2048', 89999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
         </div>
@@ -914,4 +917,17 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
-                    entry.target.style.transform =
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .product-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
