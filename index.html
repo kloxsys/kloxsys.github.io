@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klox Systems - Renewal energy solutions</title>
+    <title>Klox Systems - Renewable Energy Solutions</title>
     <style>
         * {
             margin: 0;
@@ -227,6 +227,201 @@
             margin: 0 auto 2rem;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .payment-option.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .payment-option input[type="radio"] {
+            display: none;
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-summary {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .order-summary h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #00a86b;
+        }
+
+        .submit-button {
+            background: #00a86b;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .submit-button:hover {
+            background: #008f5a;
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
         footer {
             background: #2c3e50;
             color: white;
@@ -253,6 +448,7 @@
             text-decoration: none;
             display: block;
             margin-bottom: 0.5rem;
+            cursor: pointer;
         }
 
         .footer-section a:hover {
@@ -263,6 +459,17 @@
             from {
                 opacity: 0;
                 transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
             }
             to {
                 opacity: 1;
@@ -281,6 +488,10 @@
 
             .nav-links {
                 gap: 1rem;
+            }
+
+            .modal-content {
+                margin: 1rem;
             }
         }
     </style>
@@ -337,7 +548,7 @@
                     <h3>xFlux 512</h3>
                     <p>Perfect for camping and outdoor activities. 512Wh capacity, multiple outlets.</p>
                     <div class="price">₹24,999</div>
-                    <button class="buy-button">Shop Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 512', 24999)">Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
@@ -346,7 +557,7 @@
                     <h3>xFlux 1024</h3>
                     <p>For home backup and professional use. 1024Wh capacity, pure sine wave.</p>
                     <div class="price">₹49,999</div>
-                    <button class="buy-button">Shop Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 1024', 49999)">Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
@@ -355,7 +566,7 @@
                     <h3>xFlux 2048</h3>
                     <p>Maximum power for all needs. 2048Wh capacity, expandable battery.</p>
                     <div class="price">₹89,999</div>
-                    <button class="buy-button">Shop Now</button>
+                    <button class="buy-button" onclick="openPreOrder('xFlux 2048', 89999)">Pre-Order Now</button>
                 </div>
             </div>
         </div>
@@ -367,28 +578,173 @@
         <p>With over 10 years of experience in renewable energy technology, we've helped thousands of customers stay connected and powered in their adventures, emergencies, and everyday life.</p>
     </section>
 
+    <!-- Pre-Order Modal -->
+    <div id="preOrderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-modal" onclick="closeModal('preOrderModal')">&times;</button>
+                <h2>Pre-Order Form</h2>
+                <p>Reserve your power station today</p>
+            </div>
+            <div class="modal-body">
+                <div class="success-message" id="preOrderSuccess">
+                    ✓ Pre-order submitted successfully! We'll contact you soon.
+                </div>
+                <div class="order-summary">
+                    <h3>Order Summary</h3>
+                    <div class="summary-row">
+                        <span>Product:</span>
+                        <span id="orderProduct">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Price:</span>
+                        <span id="orderPrice">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Advance Payment (20%):</span>
+                        <span id="orderAdvance">₹0</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="customerName" placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="customerEmail" placeholder="your.email@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="customerPhone" placeholder="+91 XXXXX XXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Delivery Address *</label>
+                    <textarea id="customerAddress" placeholder="Enter your complete delivery address" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="orderQuantity" value="1" min="1" max="10" onchange="updateOrderSummary()">
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Method *</label>
+                    <div class="payment-options">
+                        <label class="payment-option selected">
+                            <input type="radio" name="payment" value="gpay" checked>
+                            <div class="payment-icon">📱</div>
+                            <div>Google Pay</div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment" value="upi">
+                            <div class="payment-icon">💳</div>
+                            <div>UPI</div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment" value="netbanking">
+                            <div class="payment-icon">🏦</div>
+                            <div>Net Banking</div>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="submit-button" onclick="submitPreOrder()">Pay Advance & Pre-Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div id="supportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-modal" onclick="closeModal('supportModal')">&times;</button>
+                <h2>Support Request</h2>
+                <p>We're here to help you</p>
+            </div>
+            <div class="modal-body">
+                <div class="success-message" id="supportSuccess">
+                    ✓ Support request submitted! Our team will contact you within 24 hours.
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="supportName" placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="supportEmail" placeholder="your.email@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="supportPhone" placeholder="+91 XXXXX XXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Product (if applicable)</label>
+                    <select id="supportProduct">
+                        <option value="">Select a product</option>
+                        <option value="xFlux 512">xFlux 512</option>
+                        <option value="xFlux 1024">xFlux 1024</option>
+                        <option value="xFlux 2048">xFlux 2048</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Issue Category *</label>
+                    <select id="supportCategory" required>
+                        <option value="">Select a category</option>
+                        <option value="technical">Technical Support</option>
+                        <option value="warranty">Warranty Claim</option>
+                        <option value="delivery">Delivery Issue</option>
+                        <option value="product-info">Product Information</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Order Number (if applicable)</label>
+                    <input type="text" id="supportOrderNumber" placeholder="Enter your order number">
+                </div>
+
+                <div class="form-group">
+                    <label>Describe Your Issue *</label>
+                    <textarea id="supportMessage" placeholder="Please provide detailed information about your issue" required></textarea>
+                </div>
+
+                <button class="submit-button" onclick="submitSupport()">Submit Support Request</button>
+            </div>
+        </div>
+    </div>
+
     <footer id="contact">
         <div class="footer-content">
             <div class="footer-section">
                 <h4>Products</h4>
-                <a href="#">Power Stations</a>
-                <a href="#">Solar Panels</a>
-                <a href="#">Accessories</a>
-                <a href="#">Bundles</a>
+                <a href="#products">Power Stations</a>
+                <a href="#products">Solar Panels</a>
+                <a href="#products">Accessories</a>
+                <a href="#products">Bundles</a>
             </div>
             <div class="footer-section">
                 <h4>Support</h4>
-                <a href="#">Help Center</a>
-                <a href="#">Warranty</a>
-                <a href="#">Shipping Info</a>
-                <a href="#">Returns</a>
+                <a onclick="openModal('supportModal')">Help Center</a>
+                <a onclick="openModal('supportModal')">Warranty</a>
+                <a onclick="openModal('supportModal')">Shipping Info</a>
+                <a onclick="openModal('supportModal')">Returns</a>
             </div>
             <div class="footer-section">
                 <h4>Company</h4>
-                <a href="#">About Us</a>
-                <a href="#">Careers</a>
-                <a href="#">Contact</a>
-                <a href="#">Press</a>
+                <a href="#about">About Us</a>
+                <a href="#contact">Careers</a>
+                <a onclick="openModal('supportModal')">Contact</a>
+                <a href="#about">Press</a>
             </div>
             <div class="footer-section">
                 <h4>Connect</h4>
@@ -402,6 +758,142 @@
     </footer>
 
     <script>
+        let currentProduct = '';
+        let currentPrice = 0;
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+            // Reset success messages
+            document.querySelectorAll('.success-message').forEach(msg => msg.classList.remove('show'));
+        }
+
+        function openPreOrder(product, price) {
+            currentProduct = product;
+            currentPrice = price;
+            document.getElementById('orderProduct').textContent = product;
+            document.getElementById('orderPrice').textContent = '₹' + price.toLocaleString('en-IN');
+            updateOrderSummary();
+            openModal('preOrderModal');
+        }
+
+        function updateOrderSummary() {
+            const quantity = parseInt(document.getElementById('orderQuantity').value) || 1;
+            const total = currentPrice * quantity;
+            const advance = Math.round(total * 0.2);
+            
+            document.getElementById('orderPrice').textContent = '₹' + total.toLocaleString('en-IN');
+            document.getElementById('orderAdvance').textContent = '₹' + advance.toLocaleString('en-IN');
+        }
+
+        function submitPreOrder() {
+            const name = document.getElementById('customerName').value;
+            const email = document.getElementById('customerEmail').value;
+            const phone = document.getElementById('customerPhone').value;
+            const address = document.getElementById('customerAddress').value;
+            const quantity = document.getElementById('orderQuantity').value;
+            const payment = document.querySelector('input[name="payment"]:checked').value;
+
+            if (!name || !email || !phone || !address) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Here you would integrate with actual payment gateway
+            const advanceAmount = Math.round(currentPrice * quantity * 0.2);
+            
+            // Simulate payment processing
+            const confirmPayment = confirm(
+                `Pre-Order Summary:\n\n` +
+                `Product: ${currentProduct}\n` +
+                `Quantity: ${quantity}\n` +
+                `Advance Payment: ₹${advanceAmount.toLocaleString('en-IN')}\n` +
+                `Payment Method: ${payment.toUpperCase()}\n\n` +
+                `Proceed to payment?`
+            );
+
+            if (confirmPayment) {
+                // In production, this would redirect to Google Pay/UPI payment
+                console.log('Pre-order submitted:', {
+                    product: currentProduct,
+                    name, email, phone, address, quantity, payment,
+                    advanceAmount
+                });
+
+                document.getElementById('preOrderSuccess').classList.add('show');
+                
+                // Reset form after 3 seconds
+                setTimeout(() => {
+                    closeModal('preOrderModal');
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('customerEmail').value = '';
+                    document.getElementById('customerPhone').value = '';
+                    document.getElementById('customerAddress').value = '';
+                    document.getElementById('orderQuantity').value = '1';
+                }, 3000);
+            }
+        }
+
+        function submitSupport() {
+            const name = document.getElementById('supportName').value;
+            const email = document.getElementById('supportEmail').value;
+            const phone = document.getElementById('supportPhone').value;
+            const category = document.getElementById('supportCategory').value;
+            const message = document.getElementById('supportMessage').value;
+
+            if (!name || !email || !phone || !category || !message) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Here you would submit to your support system
+            console.log('Support request submitted:', {
+                name, email, phone, category, message,
+                product: document.getElementById('supportProduct').value,
+                orderNumber: document.getElementById('supportOrderNumber').value
+            });
+
+            document.getElementById('supportSuccess').classList.add('show');
+            
+            // Reset form after 3 seconds
+            setTimeout(() => {
+                closeModal('supportModal');
+                document.getElementById('supportName').value = '';
+                document.getElementById('supportEmail').value = '';
+                document.getElementById('supportPhone').value = '';
+                document.getElementById('supportProduct').value = '';
+                document.getElementById('supportCategory').value = '';
+                document.getElementById('supportOrderNumber').value = '';
+                document.getElementById('supportMessage').value = '';
+            }, 3000);
+        }
+
+        // Payment option selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(opt => 
+                    opt.classList.remove('selected')
+                );
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(this.id);
+                }
+            });
+        });
+
+        // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -412,6 +904,7 @@
             });
         });
 
+        // Intersection Observer for animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -100px 0px'
@@ -421,17 +914,4 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.feature-card, .product-card').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(20px)';
-            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(el);
-        });
-    </script>
-</body>
-</html>
+                    entry.target.style.transform =
