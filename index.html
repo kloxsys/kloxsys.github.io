@@ -35,9 +35,17 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
             font-size: 1.5rem;
             font-weight: bold;
-            color: #00a86b;
+            color: #667eea;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
         }
 
         .nav-links {
@@ -54,7 +62,7 @@
         }
 
         .nav-links a:hover {
-            color: #00a86b;
+            color: #667eea;
         }
 
         .hero {
@@ -163,11 +171,18 @@
         .product-image {
             width: 100%;
             height: 250px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image svg {
+            width: 80%;
+            height: 80%;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
         }
 
         .product-info {
@@ -177,6 +192,7 @@
         .product-info h3 {
             color: #333;
             margin-bottom: 0.5rem;
+            font-size: 1.5rem;
         }
 
         .product-info p {
@@ -200,7 +216,7 @@
             cursor: pointer;
             width: 100%;
             font-size: 1rem;
-            transition: background 0.3s;
+            transition: all 0.3s;
             font-weight: 600;
         }
 
@@ -230,7 +246,6 @@
             margin: 0 auto 2rem;
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -407,11 +422,6 @@
             background: #008f5a;
         }
 
-        .submit-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -492,17 +502,28 @@
             .nav-links {
                 gap: 1rem;
             }
-
-            .modal-content {
-                margin: 1rem;
-            }
         }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <div class="logo">⚡ Klox Systems</div>
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" opacity="0.7"/>
+                    <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" transform="rotate(60 50 50)" opacity="0.7"/>
+                    <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" transform="rotate(120 50 50)" opacity="0.7"/>
+                    <circle cx="50" cy="50" r="18" fill="url(#logoGrad)" opacity="0.15"/>
+                    <path d="M 54,38 L 46,48 L 52,48 L 44,62 L 58,50 L 50,50 Z" fill="url(#logoGrad)"/>
+                </svg>
+                <span>Klox Systems</span>
+            </div>
             <ul class="nav-links">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#products">Products</a></li>
@@ -543,33 +564,102 @@
     </section>
 
     <section class="products" id="products">
-        <h2>Our Products</h2>
+        <h2>Our Products - Agni Series</h2>
         <div class="product-grid">
             <div class="product-card">
-                <div class="product-image">🔌</div>
+                <div class="product-image">
+                    <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="device1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4a5568"/>
+                                <stop offset="100%" style="stop-color:#2d3748"/>
+                            </linearGradient>
+                            <linearGradient id="screen1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea"/>
+                                <stop offset="100%" style="stop-color:#764ba2"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="50" y="30" width="100" height="90" rx="8" fill="url(#device1)"/>
+                        <rect x="60" y="40" width="40" height="30" rx="3" fill="url(#screen1)"/>
+                        <circle cx="130" cy="55" r="8" fill="#00a86b" opacity="0.8"/>
+                        <rect x="60" y="80" width="80" height="8" rx="4" fill="#34495e"/>
+                        <rect x="60" y="95" width="80" height="8" rx="4" fill="#34495e"/>
+                        <circle cx="70" cy="110" r="3" fill="#95a5a6"/>
+                        <circle cx="85" cy="110" r="3" fill="#95a5a6"/>
+                        <rect x="95" y="107" width="15" height="6" rx="3" fill="#95a5a6"/>
+                        <text x="100" y="145" font-size="12" fill="#667eea" text-anchor="middle" font-weight="bold">512Wh</text>
+                    </svg>
+                </div>
                 <div class="product-info">
-                    <h3>xFlux 512</h3>
+                    <h3>Agni 512</h3>
                     <p>Perfect for camping and outdoor activities. 512Wh capacity, multiple outlets.</p>
                     <div class="price">₹24,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 512', 24999)">🛒 Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('Agni 512', 24999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
-                <div class="product-image">⚡</div>
+                <div class="product-image">
+                    <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="device2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2d3748"/>
+                                <stop offset="100%" style="stop-color:#1a202c"/>
+                            </linearGradient>
+                            <linearGradient id="screen2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00d4ff"/>
+                                <stop offset="100%" style="stop-color:#0099ff"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="40" y="25" width="120" height="100" rx="10" fill="url(#device2)"/>
+                        <rect x="52" y="37" width="50" height="35" rx="4" fill="url(#screen2)"/>
+                        <circle cx="135" cy="54" r="10" fill="#00a86b" opacity="0.9"/>
+                        <rect x="52" y="80" width="96" height="10" rx="5" fill="#34495e"/>
+                        <rect x="52" y="97" width="96" height="10" rx="5" fill="#34495e"/>
+                        <circle cx="65" cy="115" r="4" fill="#95a5a6"/>
+                        <circle cx="85" cy="115" r="4" fill="#95a5a6"/>
+                        <circle cx="105" cy="115" r="4" fill="#95a5a6"/>
+                        <rect x="120" y="111" width="20" height="8" rx="4" fill="#95a5a6"/>
+                        <text x="100" y="145" font-size="12" fill="#00d4ff" text-anchor="middle" font-weight="bold">1024Wh</text>
+                    </svg>
+                </div>
                 <div class="product-info">
-                    <h3>xFlux 1024</h3>
+                    <h3>Agni 1024</h3>
                     <p>For home backup and professional use. 1024Wh capacity, pure sine wave.</p>
                     <div class="price">₹49,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 1024', 49999)">🛒 Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('Agni 1024', 49999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
             <div class="product-card">
-                <div class="product-image">🌟</div>
+                <div class="product-image">
+                    <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="device3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1a202c"/>
+                                <stop offset="100%" style="stop-color:#000000"/>
+                            </linearGradient>
+                            <linearGradient id="screen3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#f093fb"/>
+                                <stop offset="100%" style="stop-color:#f5576c"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="30" y="20" width="140" height="110" rx="12" fill="url(#device3)"/>
+                        <rect x="45" y="35" width="60" height="40" rx="5" fill="url(#screen3)"/>
+                        <circle cx="140" cy="55" r="12" fill="#00a86b"/>
+                        <rect x="45" y="85" width="110" height="12" rx="6" fill="#34495e"/>
+                        <rect x="45" y="103" width="110" height="12" rx="6" fill="#34495e"/>
+                        <circle cx="60" cy="123" r="5" fill="#95a5a6"/>
+                        <circle cx="85" cy="123" r="5" fill="#95a5a6"/>
+                        <circle cx="110" cy="123" r="5" fill="#95a5a6"/>
+                        <circle cx="135" cy="123" r="5" fill="#95a5a6"/>
+                        <rect x="145" y="118" width="10" height="10" rx="2" fill="#e74c3c"/>
+                        <text x="100" y="145" font-size="12" fill="#f5576c" text-anchor="middle" font-weight="bold">2048Wh</text>
+                    </svg>
+                </div>
                 <div class="product-info">
-                    <h3>xFlux 2048</h3>
+                    <h3>Agni 2048</h3>
                     <p>Maximum power for all needs. 2048Wh capacity, expandable battery.</p>
                     <div class="price">₹89,999</div>
-                    <button class="buy-button" onclick="openPreOrder('xFlux 2048', 89999)">🛒 Pre-Order Now</button>
+                    <button class="buy-button" onclick="openPreOrder('Agni 2048', 89999)">🛒 Pre-Order Now</button>
                 </div>
             </div>
         </div>
@@ -581,7 +671,6 @@
         <p>With over 10 years of experience in renewable energy technology, we've helped thousands of customers stay connected and powered in their adventures, emergencies, and everyday life.</p>
     </section>
 
-    <!-- Pre-Order Modal -->
     <div id="preOrderModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -608,32 +697,26 @@
                         <span id="orderAdvance">₹0</span>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Full Name *</label>
                     <input type="text" id="customerName" placeholder="Enter your full name" required>
                 </div>
-
                 <div class="form-group">
                     <label>Email Address *</label>
                     <input type="email" id="customerEmail" placeholder="your.email@example.com" required>
                 </div>
-
                 <div class="form-group">
                     <label>Phone Number *</label>
                     <input type="tel" id="customerPhone" placeholder="+91 XXXXX XXXXX" required>
                 </div>
-
                 <div class="form-group">
                     <label>Delivery Address *</label>
                     <textarea id="customerAddress" placeholder="Enter your complete delivery address" required></textarea>
                 </div>
-
                 <div class="form-group">
                     <label>Quantity</label>
                     <input type="number" id="orderQuantity" value="1" min="1" max="10" onchange="updateOrderSummary()">
                 </div>
-
                 <div class="form-group">
                     <label>Payment Method *</label>
                     <div class="payment-options">
@@ -654,13 +737,11 @@
                         </label>
                     </div>
                 </div>
-
                 <button class="submit-button" onclick="submitPreOrder()">Pay Advance & Pre-Order</button>
             </div>
         </div>
     </div>
 
-    <!-- Support Modal -->
     <div id="supportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -672,262 +753,30 @@
                 <div class="success-message" id="supportSuccess">
                     ✓ Support request submitted! Our team will contact you within 24 hours.
                 </div>
-
                 <div class="form-group">
                     <label>Full Name *</label>
                     <input type="text" id="supportName" placeholder="Enter your full name" required>
                 </div>
-
                 <div class="form-group">
                     <label>Email Address *</label>
                     <input type="email" id="supportEmail" placeholder="your.email@example.com" required>
                 </div>
-
                 <div class="form-group">
                     <label>Phone Number *</label>
                     <input type="tel" id="supportPhone" placeholder="+91 XXXXX XXXXX" required>
                 </div>
-
                 <div class="form-group">
                     <label>Product (if applicable)</label>
                     <select id="supportProduct">
                         <option value="">Select a product</option>
-                        <option value="xFlux 512">xFlux 512</option>
-                        <option value="xFlux 1024">xFlux 1024</option>
-                        <option value="xFlux 2048">xFlux 2048</option>
+                        <option value="Agni 512">Agni 512</option>
+                        <option value="Agni 1024">Agni 1024</option>
+                        <option value="Agni 2048">Agni 2048</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label>Issue Category *</label>
                     <select id="supportCategory" required>
                         <option value="">Select a category</option>
-                        <option value="technical">Technical Support</option>
-                        <option value="warranty">Warranty Claim</option>
-                        <option value="delivery">Delivery Issue</option>
-                        <option value="product-info">Product Information</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Order Number (if applicable)</label>
-                    <input type="text" id="supportOrderNumber" placeholder="Enter your order number">
-                </div>
-
-                <div class="form-group">
-                    <label>Describe Your Issue *</label>
-                    <textarea id="supportMessage" placeholder="Please provide detailed information about your issue" required></textarea>
-                </div>
-
-                <button class="submit-button" onclick="submitSupport()">Submit Support Request</button>
-            </div>
-        </div>
-    </div>
-
-    <footer id="contact">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Products</h4>
-                <a href="#products">Power Stations</a>
-                <a href="#products">Solar Panels</a>
-                <a href="#products">Accessories</a>
-                <a href="#products">Bundles</a>
-            </div>
-            <div class="footer-section">
-                <h4>Support</h4>
-                <a onclick="openModal('supportModal')">Help Center</a>
-                <a onclick="openModal('supportModal')">Warranty</a>
-                <a onclick="openModal('supportModal')">Shipping Info</a>
-                <a onclick="openModal('supportModal')">Returns</a>
-            </div>
-            <div class="footer-section">
-                <h4>Company</h4>
-                <a href="#about">About Us</a>
-                <a href="#contact">Careers</a>
-                <a onclick="openModal('supportModal')">Contact</a>
-                <a href="#about">Press</a>
-            </div>
-            <div class="footer-section">
-                <h4>Connect</h4>
-                <a href="#">Facebook</a>
-                <a href="#">Instagram</a>
-                <a href="#">Twitter</a>
-                <a href="#">YouTube</a>
-            </div>
-        </div>
-        <p>&copy; 2024 Klox System Pvt Ltd. All rights reserved.</p>
-    </footer>
-
-    <script>
-        let currentProduct = '';
-        let currentPrice = 0;
-
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-            document.body.style.overflow = 'auto';
-            // Reset success messages
-            document.querySelectorAll('.success-message').forEach(msg => msg.classList.remove('show'));
-        }
-
-        function openPreOrder(product, price) {
-            currentProduct = product;
-            currentPrice = price;
-            document.getElementById('orderProduct').textContent = product;
-            document.getElementById('orderPrice').textContent = '₹' + price.toLocaleString('en-IN');
-            updateOrderSummary();
-            openModal('preOrderModal');
-        }
-
-        function updateOrderSummary() {
-            const quantity = parseInt(document.getElementById('orderQuantity').value) || 1;
-            const total = currentPrice * quantity;
-            const advance = Math.round(total * 0.2);
-            
-            document.getElementById('orderPrice').textContent = '₹' + total.toLocaleString('en-IN');
-            document.getElementById('orderAdvance').textContent = '₹' + advance.toLocaleString('en-IN');
-        }
-
-        function submitPreOrder() {
-            const name = document.getElementById('customerName').value;
-            const email = document.getElementById('customerEmail').value;
-            const phone = document.getElementById('customerPhone').value;
-            const address = document.getElementById('customerAddress').value;
-            const quantity = document.getElementById('orderQuantity').value;
-            const payment = document.querySelector('input[name="payment"]:checked').value;
-
-            if (!name || !email || !phone || !address) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            // Here you would integrate with actual payment gateway
-            const advanceAmount = Math.round(currentPrice * quantity * 0.2);
-            
-            // Simulate payment processing
-            const confirmPayment = confirm(
-                `Pre-Order Summary:\n\n` +
-                `Product: ${currentProduct}\n` +
-                `Quantity: ${quantity}\n` +
-                `Advance Payment: ₹${advanceAmount.toLocaleString('en-IN')}\n` +
-                `Payment Method: ${payment.toUpperCase()}\n\n` +
-                `Proceed to payment?`
-            );
-
-            if (confirmPayment) {
-                // In production, this would redirect to Google Pay/UPI payment
-                console.log('Pre-order submitted:', {
-                    product: currentProduct,
-                    name, email, phone, address, quantity, payment,
-                    advanceAmount
-                });
-
-                document.getElementById('preOrderSuccess').classList.add('show');
-                
-                // Reset form after 3 seconds
-                setTimeout(() => {
-                    closeModal('preOrderModal');
-                    document.getElementById('customerName').value = '';
-                    document.getElementById('customerEmail').value = '';
-                    document.getElementById('customerPhone').value = '';
-                    document.getElementById('customerAddress').value = '';
-                    document.getElementById('orderQuantity').value = '1';
-                }, 3000);
-            }
-        }
-
-        function submitSupport() {
-            const name = document.getElementById('supportName').value;
-            const email = document.getElementById('supportEmail').value;
-            const phone = document.getElementById('supportPhone').value;
-            const category = document.getElementById('supportCategory').value;
-            const message = document.getElementById('supportMessage').value;
-
-            if (!name || !email || !phone || !category || !message) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            // Here you would submit to your support system
-            console.log('Support request submitted:', {
-                name, email, phone, category, message,
-                product: document.getElementById('supportProduct').value,
-                orderNumber: document.getElementById('supportOrderNumber').value
-            });
-
-            document.getElementById('supportSuccess').classList.add('show');
-            
-            // Reset form after 3 seconds
-            setTimeout(() => {
-                closeModal('supportModal');
-                document.getElementById('supportName').value = '';
-                document.getElementById('supportEmail').value = '';
-                document.getElementById('supportPhone').value = '';
-                document.getElementById('supportProduct').value = '';
-                document.getElementById('supportCategory').value = '';
-                document.getElementById('supportOrderNumber').value = '';
-                document.getElementById('supportMessage').value = '';
-            }, 3000);
-        }
-
-        // Payment option selection
-        document.querySelectorAll('.payment-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.payment-option').forEach(opt => 
-                    opt.classList.remove('selected')
-                );
-                this.classList.add('selected');
-                this.querySelector('input[type="radio"]').checked = true;
-            });
-        });
-
-        // Close modal on outside click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal(this.id);
-                }
-            });
-        });
-
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-
-        // Intersection Observer for animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.feature-card, .product-card').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(20px)';
-            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(el);
-        });
-    </script>
-</body>
-</html>
+                        <option value="technical">Technical Support
