@@ -162,11 +162,186 @@ const CONFIG = {
     { value: 'general', label: 'General Question' },
   ],
 
+  // Explore Tabs
+  exploreTabs: {
+    title: 'Explore Our Products',
+    description: 'Discover detailed specifications, features, and use cases for each power station',
+    tabs: [
+      {
+        id: 'specifications',
+        name: 'Specifications',
+        icon: '📊',
+        active: true,
+        items: [
+          {
+            name: 'Agni 512',
+            icon: '🔌',
+            description: 'Compact 512Wh portable power station',
+            specs: {
+              'Capacity': '512Wh',
+              'Power': '1000W',
+              'Weight': '5.2 kg',
+              'Charging Time': '1 hour',
+            },
+          },
+          {
+            name: 'Agni 1024',
+            icon: '⚡',
+            description: 'Mid-range 1024Wh power station',
+            specs: {
+              'Capacity': '1024Wh',
+              'Power': '2000W',
+              'Weight': '10.5 kg',
+              'Charging Time': '1.5 hours',
+            },
+          },
+          {
+            name: 'Agni 2048',
+            icon: '🔋',
+            description: 'Premium 2048Wh power station',
+            specs: {
+              'Capacity': '2048Wh',
+              'Power': '3000W',
+              'Weight': '19.8 kg',
+              'Charging Time': '2 hours',
+            },
+          },
+        ],
+      },
+      {
+        id: 'features',
+        name: 'Features',
+        icon: '✨',
+        active: false,
+        items: [
+          {
+            name: 'Fast Charging Technology',
+            icon: '⚡',
+            description: 'Charge up to 80% in just 1 hour with advanced power management',
+          },
+          {
+            name: 'Multiple Outputs',
+            icon: '🔌',
+            description: 'AC, USB, USB-C, and DC outputs for all your devices',
+          },
+          {
+            name: 'Smart Display',
+            icon: '📱',
+            description: 'LCD display shows real-time power status and device info',
+          },
+          {
+            name: 'Eco-Friendly',
+            icon: '🌱',
+            description: 'LiFePO4 batteries with minimal environmental impact',
+          },
+          {
+            name: 'Lightweight Design',
+            icon: '📦',
+            description: 'Portable and easy to carry for your adventures',
+          },
+          {
+            name: 'UPS Function',
+            icon: '🔋',
+            description: 'Seamless backup power during outages',
+          },
+        ],
+      },
+      {
+        id: 'usecases',
+        name: 'Use Cases',
+        icon: '🎯',
+        active: false,
+        items: [
+          {
+            name: 'Camping & Outdoors',
+            icon: '⛺',
+            description: 'Keep your devices charged during camping trips and outdoor adventures',
+          },
+          {
+            name: 'Emergency Backup',
+            icon: '🏠',
+            description: 'Reliable backup power during electricity outages and blackouts',
+          },
+          {
+            name: 'Photography',
+            icon: '📷',
+            description: 'Power your cameras, lights, and editing equipment on location',
+          },
+          {
+            name: 'Remote Work',
+            icon: '💻',
+            description: 'Work from anywhere with uninterrupted power supply',
+          },
+          {
+            name: 'Events & Festivals',
+            icon: '🎪',
+            description: 'Run audio equipment, lights, and sound systems at events',
+          },
+          {
+            name: 'Medical Needs',
+            icon: '⚕️',
+            description: 'Critical backup power for medical devices and equipment',
+          },
+        ],
+      },
+      {
+        id: 'warranty',
+        name: 'Warranty',
+        icon: '✅',
+        active: false,
+        items: [
+          {
+            name: '5-Year Warranty',
+            icon: '📋',
+            description: 'Comprehensive 5-year warranty covers all manufacturing defects',
+          },
+          {
+            name: 'Battery Health Guarantee',
+            icon: '🔋',
+            description: '80% capacity guarantee after 5 years of normal use',
+          },
+          {
+            name: 'Free Replacements',
+            icon: '🔄',
+            description: 'Free replacement for defective units within warranty period',
+          },
+          {
+            name: '24/7 Support',
+            icon: '📞',
+            description: 'Round-the-clock customer support for all warranty claims',
+          },
+          {
+            name: 'Extended Coverage',
+            icon: '🛡️',
+            description: 'Optional extended warranty coverage available for up to 10 years',
+          },
+          {
+            name: 'Accident Protection',
+            icon: '💪',
+            description: 'Add-on accidental damage protection for peace of mind',
+          },
+        ],
+      },
+    ],
+  },
+
   // Constants
   constants: {
     advancePaymentPercent: 0.2, // 20% advance payment
     maxOrderQuantity: 10,
     minOrderQuantity: 1,
+  },
+
+  // Cart Configuration
+  cart: {
+    storageKey: 'klox_cart',
+    maxItems: 100,
+  },
+
+  // User Configuration
+  user: {
+    storageKey: 'klox_user',
+    sessionStorageKey: 'klox_session',
   },
 };
 

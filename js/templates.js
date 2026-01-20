@@ -25,9 +25,14 @@ const Templates = {
           <h3>${product.name}</h3>
           <p>${product.description}</p>
           <div class="price">${Format.currency(product.price)}</div>
-          <button class="buy-button" onclick="openPreOrder('${product.id}')">
-            🛒 Pre-Order Now
-          </button>
+          <div class="product-actions">
+            <button class="buy-button" onclick="window.appManager.cartManager.addItem('${product.id}', 1)" title="Add to Cart">
+              🛒 Add to Cart
+            </button>
+            <button class="buy-button secondary" onclick="openPreOrder('${product.id}')" title="Pre-order">
+              📋 Pre-Order
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -94,18 +99,16 @@ const Templates = {
    */
   featureCard: (feature) => `
     <div class="feature-card">
-      <div class="feature-icon">${feature.icon}</div>
+      <span class="icon">${feature.icon}</span>
       <h3>${feature.title}</h3>
       <p>${feature.description}</p>
     </div>
   `,
 
   /**
-   * Navigation Links Template
+   * Navigation Links Template (Minimalist)
    */
-  navLink: (navItem) => `
-    <li><a href="${navItem.href}">${navItem.label}</a></li>
-  `,
+  navLink: (navItem) => `<li><a href="${navItem.href}">${navItem.label}</a></li>`,
 
   /**
    * Footer Section Template
@@ -264,6 +267,164 @@ const Templates = {
       </div>
     `;
   },
+
+  /**
+   * Tabs Container Template
+   */
+  tabsContainer: (title, description, tabs) => {
+    const tabButtons = tabs.map(tab =>
+      `<button class="tab-button ${tab.active ? 'active' : ''}" data-tab="${tab.id}">
+        ${tab.icon ? `<span>${tab.icon}</span> ` : ''}${tab.name}
+      </button>`
+    ).join('');
+
+    const tabContents = tabs.map(tab =>
+      `<div id="tab-${tab.id}" class="tab-content ${tab.active ? 'active' : ''}">
+        <div class="tab-grid">
+          ${tab.items.map(item => Templates.tabItem(item)).join('')}
+        </div>
+      </div>`
+    ).join('');
+
+    return `
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <h2>${title}</h2>
+          <p>${description}</p>
+        </div>
+        <nav class="tabs-navigation">
+          ${tabButtons}
+        </nav>
+        <div class="tabs-content">
+          ${tabContents}
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Tab Item Template
+   */
+  tabItem: (item) => {
+    const specs = item.specs ? Object.entries(item.specs).map(([label, value]) =>
+      `<div class="spec-row">
+        <span class="spec-label">${label}</span>
+        <span class="spec-value">${value}</span>
+      </div>`
+    ).join('') : '';
+
+    return `
+      <div class="tab-item">
+        ${item.icon ? `<div class="tab-item-icon">${item.icon}</div>` : ''}
+        <h3>${item.name}</h3>
+        <p>${item.description}</p>
+        ${specs ? `<div class="tab-item-specs">${specs}</div>` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Shopping Cart Item Template
+   */
+  cartItem: (item) => `
+    <div class="cart-item" data-product-id="${item.id}">
+      <div class="cart-item-info">
+        <h4>${item.name}</h4>
+        <p class="item-price">${Format.currency(item.price)}</p>
+      </div>
+      <div class="cart-item-quantity">
+        <button class="qty-btn" onclick="window.appManager.cartManager.updateQuantity('${item.id}', -1)" title="Decrease">−</button>
+        <input type="number" class="qty-input" value="${item.quantity}" min="1" max="10" data-product-id="${item.id}" onchange="window.appManager.cartManager.updateQuantity('${item.id}', this.value)">
+        <button class="qty-btn" onclick="window.appManager.cartManager.updateQuantity('${item.id}', 1)" title="Increase">+</button>
+      </div>
+      <div class="cart-item-total">
+        <p class="item-total">${Format.currency(item.price * item.quantity)}</p>
+      </div>
+      <button class="cart-item-remove" onclick="window.appManager.cartManager.removeItem('${item.id}')" title="Remove">✕</button>
+    </div>
+  `,
+
+  /**
+   * Shopping Cart Modal Template
+   */
+  cartModal: (items, total, itemCount) => {
+    const itemsHTML = items.length > 0 
+      ? items.map(item => Templates.cartItem(item)).join('')
+      : '<p class="empty-cart">Your cart is empty. Start adding products!</p>';
+
+    return `
+      <div class="cart-summary">
+        <div class="cart-header">
+          <h3>Shopping Cart</h3>
+          <span class="cart-count">${itemCount} items</span>
+        </div>
+        <div class="cart-items">
+          ${itemsHTML}
+        </div>
+        <div class="cart-totals">
+          <div class="totals-row">
+            <span>Subtotal:</span>
+            <span>${Format.currency(total)}</span>
+          </div>
+          <div class="totals-row">
+            <span>Advance Payment (20%):</span>
+            <span>${Format.currency(total * 0.2)}</span>
+          </div>
+          <div class="totals-row total">
+            <span>Total Due:</span>
+            <span>${Format.currency(total * 0.2)}</span>
+          </div>
+        </div>
+        <button class="checkout-button" ${items.length === 0 ? 'disabled' : ''} onclick="window.appManager.cartManager.checkout()">
+          Proceed to Checkout
+        </button>
+      </div>
+    `;
+  },
+
+  /**
+   * User Menu Template
+   */
+  userMenu: (user) => `
+    <div class="user-menu">
+      <div class="user-info">
+        ${user.photoUrl ? `<img src="${user.photoUrl}" alt="${user.displayName}" class="user-avatar">` : '<div class="user-avatar-placeholder">👤</div>'}
+        <div>
+          <p class="user-name">${user.displayName || 'User'}</p>
+          <p class="user-email">${user.email}</p>
+        </div>
+      </div>
+      <div class="user-menu-items">
+        <a href="#profile" onclick="window.appManager.userManager.openProfile(event)">👤 Profile</a>
+        <a href="#orders" onclick="window.appManager.userManager.openOrders(event)">📦 Orders</a>
+        <a href="#settings" onclick="window.appManager.userManager.openSettings(event)">⚙️ Settings</a>
+        <hr>
+        <a href="#logout" onclick="window.appManager.userManager.logout(event)" class="logout-link">🚪 Logout</a>
+      </div>
+    </div>
+  `,
+
+  /**
+   * Auth Modal Template
+   */
+  authModal: () => `
+    <div class="auth-tabs">
+      <button class="auth-tab-btn active" data-tab="login" onclick="window.switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab-btn" data-tab="signup" onclick="window.switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div id="login-tab" class="auth-tab-content active">
+      <p class="auth-description">Sign in with your Google account</p>
+      <button class="google-auth-btn" id="googleLoginBtn" onclick="window.appManager.userManager.signInWithGoogle()">
+        🔐 Sign In with Google
+      </button>
+    </div>
+    <div id="signup-tab" class="auth-tab-content">
+      <p class="auth-description">Create an account with Google</p>
+      <button class="google-auth-btn" id="googleSignupBtn" onclick="window.appManager.userManager.signUpWithGoogle()">
+        🔐 Sign Up with Google
+      </button>
+    </div>
+  `,
 };
 
 // Export for use in modules

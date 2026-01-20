@@ -1,6 +1,6 @@
 /**
  * KLOX SYSTEMS - INITIALIZATION & DYNAMIC RENDERING
- * Renders dynamic content on page load using CONFIG and Templates
+ * Renders dynamic content on page load with smooth interactions
  */
 
 /**
@@ -19,6 +19,9 @@ function initializePage() {
   // Render Products
   renderProducts();
 
+  // Render Explore Tabs
+  renderExploreTabs();
+
   // Render About Section
   renderAboutSection();
 
@@ -31,7 +34,28 @@ function initializePage() {
   // Set up form handlers
   setupFormHandlers();
 
+  // Setup smooth scroll interactions
+  setupSmoothScrolling();
+
   Logger.info('Page initialization complete');
+}
+
+/**
+ * Setup smooth scrolling for navigation
+ */
+function setupSmoothScrolling() {
+  DOM.on('a[href^="#"]', 'click', function(e) {
+    const href = this.getAttribute('href');
+    if (href === '#contact') return; // Support modal handled by nav manager
+    
+    const targetId = href.substring(1);
+    const target = DOM.select(`#${targetId}`);
+    
+    if (target && targetId !== 'contact') {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
 }
 
 /**
@@ -107,6 +131,20 @@ function renderPaymentOptions() {
   paymentOptions.innerHTML = CONFIG.paymentMethods
     .map((method, index) => Templates.paymentOption(method, index === 0))
     .join('');
+}
+
+/**
+ * Render explore tabs section
+ */
+function renderExploreTabs() {
+  const exploreTabs = DOM.select('#exploreTabs');
+  if (!exploreTabs || !CONFIG.exploreTabs) return;
+
+  exploreTabs.innerHTML = Templates.tabsContainer(
+    CONFIG.exploreTabs.title,
+    CONFIG.exploreTabs.description,
+    CONFIG.exploreTabs.tabs
+  );
 }
 
 /**

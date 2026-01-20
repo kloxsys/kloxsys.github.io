@@ -48,7 +48,7 @@ class ModalManager {
   openModal(modalId) {
     const modal = DOM.select(`#${modalId}`);
     if (modal) {
-      DOM.addClass(modal, 'active');
+      DOM.addClass(modal, 'show');
       this.currentModal = modalId;
       document.body.style.overflow = 'hidden';
       Logger.info(`Modal opened: ${modalId}`);
@@ -62,7 +62,7 @@ class ModalManager {
   closeModal(modalId) {
     const modal = DOM.select(`#${modalId}`);
     if (modal) {
-      DOM.removeClass(modal, 'active');
+      DOM.removeClass(modal, 'show');
       this.currentModal = null;
       document.body.style.overflow = '';
 
@@ -338,27 +338,456 @@ class PaymentManager {
 }
 
 // ============================================
-// NAVIGATION
+// SHOPPING CART MANAGEMENT
 // ============================================
 
-class NavigationManager {
+class CartManager {
   constructor() {
+    this.items = [];
     this.init();
   }
 
   /**
-   * Initialize navigation
+   * Initialize cart from local storage
    */
   init() {
-    // Smooth scroll on link click
-    DOM.on('a[href^="#"]', 'click', (e) => {
-      const href = e.currentTarget.getAttribute('href');
-      if (href === '#contact') {
-        // Open support modal instead
-        e.preventDefault();
-        window.appManager.modalManager.openModal('supportModal');
-      }
+    this.loadCart();
+    this.setupCartIcon();
+  }
+
+  /**
+   * Load cart from local storage
+   */
+  loadCart() {
+    const saved = Storage.get(CONFIG.cart.storageKey);
+    this.items = saved ? JSON.parse(saved) : [];
+    this.updateCartIcon();
+  }
+
+  /**
+   * Save cart to local storage
+   */
+  saveCart() {
+    Storage.set(CONFIG.cart.storageKey, JSON.stringify(this.items));
+    this.updateCartIcon();
+    Analytics.trackEvent('cart_updated', { itemCount: this.items.length });
+  }
+
+  /**
+   * Add item to cart
+   */
+  addItem(productId, quantity = 1) {
+    const product = CONFIG.products.find(p => p.id === productId);
+    if (!product) return;
+
+    const existingItem = this.items.find(item => item.id === productId);
+    
+    if (existingItem) {
+      existingItem.quantity += parseInt(quantity);
+    } else {
+      this.items.push({
+        id: productId,
+        name: product.name,
+        price: product.price,
+        quantity: parseInt(quantity),
+      });
+    }
+
+    this.saveCart();
+    this.showNotification(`Added ${product.name} to cart`);
+    Logger.info('Item added to cart', { productId, quantity });
+  }
+
+  /**
+   * Remove item from cart
+   */
+  removeItem(productId) {
+    this.items = this.items.filter(item => item.id !== productId);
+    this.saveCart();
+    this.renderCartModal();
+    Logger.info('Item removed from cart', { productId });
+  }
+
+  /**
+   * Update item quantity
+   */
+  updateQuantity(productId, quantityDelta) {
+    const item = this.items.find(i => i.id === productId);
+    if (!item) return;
+
+    const delta = typeof quantityDelta === 'string' ? 
+      parseInt(quantityDelta) - item.quantity : 
+      parseInt(quantityDelta);
+
+    item.quantity += delta;
+
+    if (item.quantity <= 0) {
+      this.removeItem(productId);
+    } else if (item.quantity > CONFIG.constants.maxOrderQuantity) {
+      item.quantity = CONFIG.constants.maxOrderQuantity;
+    } else {
+      this.saveCart();
+      this.renderCartModal();
+    }
+  }
+
+  /**
+   * Get cart total
+   */
+  getTotal() {
+    return this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }
+
+  /**
+   * Get item count
+   */
+  getItemCount() {
+    return this.items.reduce((sum, item) => sum + item.quantity, 0);
+  }
+
+  /**
+   * Setup cart icon in header
+   */
+  setupCartIcon() {
+    const header = DOM.select('header nav');
+    if (!header.querySelector('.cart-icon-wrapper')) {
+      const cartIcon = `
+        <div class="cart-icon-wrapper">
+          <button class="cart-icon" onclick="window.appManager.cartManager.openCart()" title="Shopping Cart">
+            🛒
+            <span class="cart-badge" id="cartBadge">${this.getItemCount()}</span>
+          </button>
+        </div>
+      `;
+      header.insertAdjacentHTML('beforeend', cartIcon);
+    }
+  }
+
+  /**
+   * Update cart icon badge
+   */
+  updateCartIcon() {
+    const badge = DOM.select('#cartBadge');
+    if (badge) {
+      const count = this.getItemCount();
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+  }
+
+  /**
+   * Open cart modal
+   */
+  openCart() {
+    const modal = DOM.select('#cartModal');
+    if (!modal) {
+      const cartModal = `
+        <div id="cartModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Shopping Cart</h2>
+              <button class="close-modal" onclick="closeModal('cartModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="cartContent"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', cartModal);
+    }
+    
+    this.renderCartModal();
+    window.appManager.modalManager.openModal('cartModal');
+  }
+
+  /**
+   * Render cart modal content
+   */
+  renderCartModal() {
+    const cartContent = DOM.select('#cartContent');
+    if (cartContent) {
+      const total = this.getTotal();
+      const itemCount = this.getItemCount();
+      cartContent.innerHTML = Templates.cartModal(this.items, total, itemCount);
+    }
+  }
+
+  /**
+   * Proceed to checkout
+   */
+  checkout() {
+    if (this.items.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+
+    if (!window.appManager.userManager.isLoggedIn()) {
+      alert('Please sign in to proceed with checkout');
+      window.appManager.modalManager.openModal('authModal');
+      return;
+    }
+
+    window.appManager.modalManager.closeModal('cartModal');
+    this.showCheckoutFlow();
+  }
+
+  /**
+   * Show checkout flow
+   */
+  showCheckoutFlow() {
+    // This would integrate with payment gateway
+    alert('Checkout flow would process here. Items: ' + this.items.length);
+    Logger.info('Checkout initiated', { items: this.items.length });
+  }
+
+  /**
+   * Show notification
+   */
+  showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 3000);
+  }
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+class UserManager {
+  constructor() {
+    this.user = null;
+    this.init();
+  }
+
+  /**
+   * Initialize user manager
+   */
+  init() {
+    this.loadUser();
+    this.setupAuthUI();
+  }
+
+  /**
+   * Load user from local storage
+   */
+  loadUser() {
+    const saved = Storage.get(CONFIG.user.storageKey);
+    this.user = saved ? JSON.parse(saved) : null;
+    this.updateUserUI();
+  }
+
+  /**
+   * Save user to local storage
+   */
+  saveUser() {
+    Storage.set(CONFIG.user.storageKey, JSON.stringify(this.user));
+    this.updateUserUI();
+  }
+
+  /**
+   * Check if user is logged in
+   */
+  isLoggedIn() {
+    return this.user !== null;
+  }
+
+  /**
+   * Setup auth UI in header
+   */
+  setupAuthUI() {
+    const nav = DOM.select('nav .nav-links');
+    if (!nav) return;
+
+    const authContainer = nav.parentElement;
+    
+    if (this.isLoggedIn()) {
+      // Show user menu
+      const userMenuHTML = `
+        <div class="user-profile-btn" onclick="window.appManager.userManager.toggleUserMenu()">
+          👤 ${this.user.displayName?.split(' ')[0] || 'User'}
+          <div id="userMenuDropdown" class="user-menu-dropdown" style="display: none;">
+            ${Templates.userMenu(this.user)}
+          </div>
+        </div>
+      `;
+      authContainer.insertAdjacentHTML('beforeend', userMenuHTML);
+    } else {
+      // Show auth button
+      const authBtnHTML = `
+        <button class="auth-btn" onclick="window.appManager.userManager.openAuth()">Sign In</button>
+      `;
+      authContainer.insertAdjacentHTML('beforeend', authBtnHTML);
+    }
+  }
+
+  /**
+   * Open auth modal
+   */
+  openAuth() {
+    const modal = DOM.select('#authModal');
+    if (!modal) {
+      const authModal = `
+        <div id="authModal" class="modal">
+          <div class="modal-content auth-modal-content">
+            <div class="modal-header">
+              <h2>Sign In / Sign Up</h2>
+              <button class="close-modal" onclick="closeModal('authModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+              ${Templates.authModal()}
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', authModal);
+    }
+    window.appManager.modalManager.openModal('authModal');
+  }
+
+  /**
+   * Sign in with Google
+   */
+  signInWithGoogle() {
+    // Simulate Google OAuth flow
+    // In production, use Firebase or proper OAuth implementation
+    this.user = {
+      id: 'user_' + Math.random().toString(36).substr(2, 9),
+      email: 'user@gmail.com',
+      displayName: 'John Doe',
+      photoUrl: null,
+      createdAt: new Date().toISOString(),
+    };
+    
+    this.saveUser();
+    window.appManager.modalManager.closeModal('authModal');
+    this.refreshUI();
+    Logger.info('User signed in', { email: this.user.email });
+    Analytics.trackEvent('user_signed_in');
+  }
+
+  /**
+   * Sign up with Google
+   */
+  signUpWithGoogle() {
+    // Same as sign in for now - in production would differentiate
+    this.signInWithGoogle();
+  }
+
+  /**
+   * Logout
+   */
+  logout(event) {
+    if (event) event.preventDefault();
+    
+    this.user = null;
+    Storage.remove(CONFIG.user.storageKey);
+    this.refreshUI();
+    Logger.info('User logged out');
+    Analytics.trackEvent('user_logged_out');
+    alert('You have been signed out');
+  }
+
+  /**
+   * Toggle user menu
+   */
+  toggleUserMenu() {
+    const dropdown = DOM.select('#userMenuDropdown');
+    if (dropdown) {
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  /**
+   * Open user profile
+   */
+  openProfile(event) {
+    if (event) event.preventDefault();
+    alert(`Profile: ${this.user.displayName}\nEmail: ${this.user.email}`);
+  }
+
+  /**
+   * Open user orders
+   */
+  openOrders(event) {
+    if (event) event.preventDefault();
+    alert('Your orders will appear here');
+  }
+
+  /**
+   * Open settings
+   */
+  openSettings(event) {
+    if (event) event.preventDefault();
+    alert('Settings page coming soon');
+  }
+
+  /**
+   * Update user UI after state change
+   */
+  updateUserUI() {
+    // This will be called after login/logout
+  }
+
+  /**
+   * Refresh entire UI
+   */
+  refreshUI() {
+    window.location.reload();
+  }
+}
+
+
+// ============================================
+// TABS MANAGEMENT
+// ============================================
+
+class TabManager {
+  constructor() {
+    this.currentTab = null;
+    this.init();
+  }
+
+  /**
+   * Initialize tabs
+   */
+  init() {
+    // Set up tab button click handlers
+    DOM.on('.tab-button', 'click', (e) => {
+      const tabName = e.currentTarget.getAttribute('data-tab');
+      this.switchTab(tabName);
     });
+  }
+
+  /**
+   * Switch active tab
+   */
+  switchTab(tabName) {
+    // Remove active class from all buttons and content
+    DOM.selectAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    DOM.selectAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+
+    // Add active class to clicked button and corresponding content
+    const activeButton = DOM.select(`.tab-button[data-tab="${tabName}"]`);
+    const activeContent = DOM.select(`#tab-${tabName}`);
+
+    if (activeButton) {
+      activeButton.classList.add('active');
+    }
+    if (activeContent) {
+      activeContent.classList.add('active');
+    }
+
+    this.currentTab = tabName;
+    Logger.info(`Switched to tab: ${tabName}`);
   }
 }
 
@@ -373,6 +802,9 @@ class AppManager {
     this.supportManager = new SupportManager();
     this.paymentManager = new PaymentManager();
     this.navigationManager = new NavigationManager();
+    this.tabManager = new TabManager();
+    this.cartManager = new CartManager();
+    this.userManager = new UserManager();
 
     // Set up manager references
     this.preOrderManager.setModalManager(this.modalManager);
@@ -393,11 +825,24 @@ class AppManager {
     window.updateOrderSummary = () => this.preOrderManager.updateOrderSummary();
     window.submitPreOrder = () => this.preOrderManager.submitPreOrder();
     window.submitSupportRequest = () => this.supportManager.submitSupportRequest();
+    window.switchTab = (tabName) => this.tabManager.switchTab(tabName);
+    window.switchAuthTab = (tabName) => this.switchAuthTab(tabName);
 
     // Initialize lazy loading
     Performance.lazyLoadImages();
 
     Analytics.trackPageView(document.title);
+  }
+
+  /**
+   * Switch auth tab
+   */
+  switchAuthTab(tabName) {
+    DOM.selectAll('.auth-tab-btn').forEach(btn => btn.classList.remove('active'));
+    DOM.selectAll('.auth-tab-content').forEach(content => content.classList.remove('active'));
+    
+    DOM.select(`.auth-tab-btn[data-tab="${tabName}"]`)?.classList.add('active');
+    DOM.select(`#${tabName}-tab`)?.classList.add('active');
   }
 }
 
