@@ -847,6 +847,26 @@ class AppManager {
 }
 
 // ============================================
+// GLOBAL UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Toggle FAQ item
+ */
+window.toggleFAQ = function(index) {
+  const answer = DOM.select(`#faq-${index}`);
+  const question = answer?.previousElementSibling;
+  
+  if (answer && question) {
+    answer.classList.toggle('open');
+    const toggle = question.querySelector('.faq-toggle');
+    if (toggle) {
+      toggle.textContent = answer.classList.contains('open') ? '−' : '+';
+    }
+  }
+};
+
+// ============================================
 // APP STARTUP
 // ============================================
 

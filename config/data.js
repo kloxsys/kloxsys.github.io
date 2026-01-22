@@ -16,11 +16,52 @@ const CONFIG = {
 
   // Navigation Links
   navigation: [
-    { label: 'Home', href: '#home' },
-    { label: 'Products', href: '#products' },
-    { label: 'Features', href: '#features' },
-    { label: 'About', href: '#about' },
-    { label: 'Contact', href: '#contact' },
+    { 
+      label: 'Klox', 
+      href: '#home',
+      children: [
+        { label: 'About', href: '#about' },
+        { label: 'Management', href: '#management' },
+        { label: 'Vision', href: '#vision' },
+      ]
+    },
+    { 
+      label: 'Products', 
+      href: '#products',
+      children: [
+        { 
+          label: 'Ojas Series',
+          children: [
+            { label: 'Ojas_0', href: '#ojas-0' },
+            { label: 'Ojas_1', href: '#ojas-1' },
+            { label: 'Ojas_2', href: '#ojas-2' },
+          ]
+        },
+      ]
+    },
+    { 
+      label: 'Services', 
+      href: '#services',
+      children: [
+        { label: 'Hardware', href: '#hardware' },
+        { label: 'Firmware', href: '#firmware' },
+        { label: 'Software', href: '#software' },
+      ]
+    },
+    { 
+      label: 'Support', 
+      href: '#support',
+      children: [
+        { label: 'Help Center', href: '#help-center' },
+        { label: 'Knowledge base', href: '#knowledge-base' },
+        { label: 'Contact', href: '#contact' },
+      ]
+    },
+    { 
+      label: 'Store', 
+      href: '#store',
+      children: []
+    },
   ],
 
   // Hero Section
@@ -325,7 +366,350 @@ const CONFIG = {
     ],
   },
 
-  // Constants
+  // Management Team
+  management: {
+    title: 'Leadership Team',
+    description: 'Meet the visionary leaders driving innovation at Klox Systems',
+    team: [
+      {
+        name: 'Rajesh Kumar',
+        role: 'Founder & CEO',
+        bio: 'Visionary entrepreneur with 15+ years in renewable energy and power systems',
+        icon: '👔',
+      },
+      {
+        name: 'Priya Sharma',
+        role: 'Chief Technology Officer',
+        bio: 'Expert in battery technology and power management systems',
+        icon: '⚡',
+      },
+      {
+        name: 'Amit Patel',
+        role: 'Chief Operations Officer',
+        bio: 'Experienced leader in manufacturing and supply chain optimization',
+        icon: '🏭',
+      },
+      {
+        name: 'Sarah Johnson',
+        role: 'Chief Marketing Officer',
+        bio: 'Strategic marketer focused on sustainable energy solutions',
+        icon: '📊',
+      },
+    ],
+  },
+
+  // Vision & Mission
+  vision: {
+    title: 'Our Vision & Mission',
+    mission: {
+      title: 'Our Mission',
+      description: 'To empower individuals and businesses with reliable, portable power solutions that enable freedom, sustainability, and innovation in energy management.',
+      icon: '🎯',
+    },
+    vision: {
+      title: 'Our Vision',
+      description: 'To become the global leader in portable power technology, making clean, renewable energy accessible to everyone, everywhere.',
+      icon: '🌍',
+    },
+    values: [
+      {
+        title: 'Innovation',
+        description: 'Continuously pushing boundaries to develop cutting-edge power solutions',
+        icon: '💡',
+      },
+      {
+        title: 'Sustainability',
+        description: 'Committed to reducing carbon footprint through renewable energy',
+        icon: '🌿',
+      },
+      {
+        title: 'Reliability',
+        description: 'Building products you can trust in any condition',
+        icon: '🔒',
+      },
+      {
+        title: 'Excellence',
+        description: 'Pursuing perfection in every aspect of our business',
+        icon: '⭐',
+      },
+    ],
+  },
+
+  // Services
+  services: {
+    title: 'Our Services',
+    description: 'Comprehensive support across hardware, firmware, and software solutions',
+    categories: [
+      {
+        title: 'Hardware Services',
+        href: '#hardware',
+        description: 'Expert maintenance, repairs, and hardware upgrades',
+        icon: '🔧',
+      },
+      {
+        title: 'Firmware Services',
+        href: '#firmware',
+        description: 'Regular updates, optimization, and firmware upgrades',
+        icon: '📡',
+      },
+      {
+        title: 'Software Services',
+        href: '#software',
+        description: 'Mobile apps, monitoring dashboards, and analytics tools',
+        icon: '💻',
+      },
+    ],
+  },
+
+  // Hardware Services Details
+  hardwareServices: {
+    title: 'Hardware Services',
+    description: 'Professional maintenance and hardware support for optimal performance',
+    features: [
+      {
+        title: 'Installation & Setup',
+        description: 'Professional installation and configuration assistance',
+        icon: '⚙️',
+      },
+      {
+        title: 'Preventive Maintenance',
+        description: 'Regular check-ups to ensure peak performance and longevity',
+        icon: '🔍',
+      },
+      {
+        title: 'Repair Services',
+        description: 'Fast and reliable repair services with genuine components',
+        icon: '🔨',
+      },
+      {
+        title: 'Component Upgrades',
+        description: 'Enhanced batteries and modules for increased capacity',
+        icon: '⬆️',
+      },
+      {
+        title: 'Technical Support',
+        description: '24/7 expert technical assistance via phone, email, or chat',
+        icon: '📞',
+      },
+      {
+        title: 'On-Site Service',
+        description: 'Mobile service units available for major installations',
+        icon: '🚐',
+      },
+    ],
+  },
+
+  // Firmware Services Details
+  firmwareServices: {
+    title: 'Firmware Services',
+    description: 'Keep your devices optimized with regular firmware updates',
+    features: [
+      {
+        title: 'OTA Updates',
+        description: 'Over-the-air firmware updates for seamless upgrades',
+        icon: '📥',
+      },
+      {
+        title: 'Security Patches',
+        description: 'Regular security updates to protect your device',
+        icon: '🔐',
+      },
+      {
+        title: 'Performance Optimization',
+        description: 'Updates that enhance efficiency and extend battery life',
+        icon: '⚡',
+      },
+      {
+        title: 'Feature Enhancements',
+        description: 'New capabilities and improvements through firmware updates',
+        icon: '✨',
+      },
+      {
+        title: 'Version Management',
+        description: 'Rollback options and version history management',
+        icon: '📦',
+      },
+      {
+        title: 'Beta Programs',
+        description: 'Early access to new features for beta testers',
+        icon: '🧪',
+      },
+    ],
+  },
+
+  // Software Services Details
+  softwareServices: {
+    title: 'Software Services',
+    description: 'Comprehensive software ecosystem for monitoring and control',
+    features: [
+      {
+        title: 'Mobile App',
+        description: 'iOS and Android apps for real-time device monitoring',
+        icon: '📱',
+      },
+      {
+        title: 'Web Dashboard',
+        description: 'Cloud-based dashboard for complete power management',
+        icon: '💻',
+      },
+      {
+        title: 'Analytics & Insights',
+        description: 'Detailed power usage analytics and optimization recommendations',
+        icon: '📊',
+      },
+      {
+        title: 'Smart Scheduling',
+        description: 'Automated charging schedules and load management',
+        icon: '⏱️',
+      },
+      {
+        title: 'API Integration',
+        description: 'Developer API for third-party integrations',
+        icon: '🔗',
+      },
+      {
+        title: 'Cloud Sync',
+        description: 'Seamless synchronization across all your devices',
+        icon: '☁️',
+      },
+    ],
+  },
+
+  // Help Center
+  helpCenter: {
+    title: 'Help Center',
+    description: 'Find answers to common questions and get support',
+    faq: [
+      {
+        question: 'How long does it take to charge a power station?',
+        answer: 'Charging time varies by capacity: Agni 512 takes ~1 hour, Agni 1024 takes ~1.5 hours, and Agni 2048 takes ~2.5 hours with standard AC charging.',
+        category: 'Charging',
+      },
+      {
+        question: 'Can I use the power station while charging?',
+        answer: 'Yes, all Klox power stations support passthrough charging, allowing you to use devices while the station itself is charging.',
+        category: 'Usage',
+      },
+      {
+        question: 'What is the warranty period?',
+        answer: 'All Klox Systems products come with a standard 2-year warranty covering manufacturing defects and hardware issues.',
+        category: 'Warranty',
+      },
+      {
+        question: 'How do I update the firmware?',
+        answer: 'Firmware updates are pushed automatically via OTA (Over-The-Air). You can also manually check for updates in the mobile app settings.',
+        category: 'Firmware',
+      },
+      {
+        question: 'Is the power station waterproof?',
+        answer: 'Our power stations have IP54 rating, making them splash-proof and dust-resistant. Not suitable for submerged use.',
+        category: 'Specifications',
+      },
+      {
+        question: 'What devices can I charge?',
+        answer: 'You can charge any device with USB, USB-C, AC, or wireless charging via our AC outlets. Compatible with thousands of devices.',
+        category: 'Compatibility',
+      },
+    ],
+  },
+
+  // Knowledge Base
+  knowledgeBase: {
+    title: 'Knowledge Base',
+    description: 'Comprehensive guides and documentation for all topics',
+    articles: [
+      {
+        title: 'Getting Started with Your Power Station',
+        category: 'Getting Started',
+        icon: '📖',
+        content: 'Complete guide to unboxing, setting up, and first use of your Klox power station.',
+      },
+      {
+        title: 'Battery Maintenance & Care',
+        category: 'Maintenance',
+        icon: '🔋',
+        content: 'Best practices for extending battery life and maintaining optimal performance.',
+      },
+      {
+        title: 'Solar Panel Installation',
+        category: 'Installation',
+        icon: '☀️',
+        content: 'Step-by-step guide to connecting and using solar panels with your station.',
+      },
+      {
+        title: 'Load Calculations & Planning',
+        category: 'Usage',
+        icon: '⚖️',
+        content: 'Learn how to calculate power requirements and plan your device usage.',
+      },
+      {
+        title: 'Troubleshooting Common Issues',
+        category: 'Support',
+        icon: '🔧',
+        content: 'Solutions to common problems and error messages explained.',
+      },
+      {
+        title: 'Traveling with Your Power Station',
+        category: 'Travel',
+        icon: '✈️',
+        content: 'Tips for safely traveling with power stations on planes and vehicles.',
+      },
+    ],
+  },
+
+  // Store Information
+  store: {
+    title: 'Klox Store',
+    description: 'Shop our complete range of power stations and accessories',
+    highlights: [
+      {
+        title: 'Free Shipping',
+        description: 'On all orders over ₹5000 across India',
+        icon: '🚚',
+      },
+      {
+        title: 'Easy Returns',
+        description: '30-day hassle-free return policy',
+        icon: '↩️',
+      },
+      {
+        title: 'Expert Support',
+        description: 'Get personalized recommendations from our team',
+        icon: '👥',
+      },
+      {
+        title: 'Fast Delivery',
+        description: '2-3 business days delivery to major cities',
+        icon: '⚡',
+      },
+    ],
+    accessories: [
+      {
+        name: 'Solar Panel 100W',
+        price: 12999,
+        description: 'Portable solar panel for efficient charging',
+        icon: '☀️',
+      },
+      {
+        name: 'Car Charger',
+        price: 2999,
+        description: '12V car charging cable and adapter',
+        icon: '🚗',
+      },
+      {
+        name: 'Carrying Case',
+        price: 4999,
+        description: 'Protective carrying case for safe transport',
+        icon: '🎒',
+      },
+      {
+        name: 'Expansion Battery Module',
+        price: 24999,
+        description: 'Add 512Wh extra capacity to any station',
+        icon: '🔌',
+      },
+    ],
+  },
   constants: {
     advancePaymentPercent: 0.2, // 20% advance payment
     maxOrderQuantity: 10,

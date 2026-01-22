@@ -25,6 +25,33 @@ function initializePage() {
   // Render About Section
   renderAboutSection();
 
+  // Render Management
+  renderManagement();
+
+  // Render Vision
+  renderVision();
+
+  // Render Services
+  renderServices();
+
+  // Render Hardware Services
+  renderHardwareServices();
+
+  // Render Firmware Services
+  renderFirmwareServices();
+
+  // Render Software Services
+  renderSoftwareServices();
+
+  // Render Help Center
+  renderHelpCenter();
+
+  // Render Knowledge Base
+  renderKnowledgeBase();
+
+  // Render Store
+  renderStore();
+
   // Render Payment Options
   renderPaymentOptions();
 
@@ -36,6 +63,9 @@ function initializePage() {
 
   // Setup smooth scroll interactions
   setupSmoothScrolling();
+
+  // Setup navigation dropdowns
+  setupNavigationDropdowns();
 
   Logger.info('Page initialization complete');
 }
@@ -54,6 +84,54 @@ function setupSmoothScrolling() {
     if (target && targetId !== 'contact') {
       e.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+/**
+ * Setup navigation dropdown interactions
+ */
+function setupNavigationDropdowns() {
+  // Handle click events on parent navigation items
+  DOM.on('.nav-parent-link', 'click', function(e) {
+    const parentItem = this.closest('.nav-item-parent');
+    if (parentItem) {
+      const dropdown = parentItem.querySelector('.nav-dropdown');
+      if (dropdown) {
+        // On mobile, toggle the dropdown
+        if (window.innerWidth <= 768) {
+          e.preventDefault();
+          parentItem.classList.toggle('active');
+        }
+      }
+    }
+  });
+
+  // Close all dropdowns when a link is clicked
+  DOM.on('.nav-dropdown a', 'click', function(e) {
+    const parentItem = this.closest('.nav-item-parent');
+    if (parentItem) {
+      parentItem.classList.remove('active');
+    }
+  });
+
+  // Close dropdowns when clicking outside on mobile
+  document.addEventListener('click', function(e) {
+    if (window.innerWidth <= 768) {
+      if (!e.target.closest('.nav-item-parent')) {
+        DOM.selectAll('.nav-item-parent.active').forEach(item => {
+          item.classList.remove('active');
+        });
+      }
+    }
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+      DOM.selectAll('.nav-item-parent.active').forEach(item => {
+        item.classList.remove('active');
+      });
     }
   });
 }
@@ -163,6 +241,102 @@ function renderFooter() {
   if (footerCopyright) {
     footerCopyright.textContent = CONFIG.footer.copyright;
   }
+}
+
+/**
+ * Render management team
+ */
+function renderManagement() {
+  const managementContent = DOM.select('#managementContent');
+  if (!managementContent || !CONFIG.management) return;
+
+  managementContent.innerHTML = CONFIG.management.team
+    .map(member => Templates.teamMember(member))
+    .join('');
+}
+
+/**
+ * Render vision section
+ */
+function renderVision() {
+  const visionContent = DOM.select('#visionContent');
+  if (!visionContent || !CONFIG.vision) return;
+
+  visionContent.innerHTML = Templates.visionSection(CONFIG.vision);
+}
+
+/**
+ * Render services
+ */
+function renderServices() {
+  const servicesContent = DOM.select('#servicesContent');
+  if (!servicesContent || !CONFIG.services) return;
+
+  servicesContent.innerHTML = CONFIG.services.categories
+    .map(service => Templates.serviceCard(service))
+    .join('');
+}
+
+/**
+ * Render hardware services
+ */
+function renderHardwareServices() {
+  const hardwareContent = DOM.select('#hardwareContent');
+  if (!hardwareContent || !CONFIG.hardwareServices) return;
+
+  hardwareContent.innerHTML = Templates.serviceDetailSection(CONFIG.hardwareServices);
+}
+
+/**
+ * Render firmware services
+ */
+function renderFirmwareServices() {
+  const firmwareContent = DOM.select('#firmwareContent');
+  if (!firmwareContent || !CONFIG.firmwareServices) return;
+
+  firmwareContent.innerHTML = Templates.serviceDetailSection(CONFIG.firmwareServices);
+}
+
+/**
+ * Render software services
+ */
+function renderSoftwareServices() {
+  const softwareContent = DOM.select('#softwareContent');
+  if (!softwareContent || !CONFIG.softwareServices) return;
+
+  softwareContent.innerHTML = Templates.serviceDetailSection(CONFIG.softwareServices);
+}
+
+/**
+ * Render help center
+ */
+function renderHelpCenter() {
+  const helpCenterContent = DOM.select('#helpCenterContent');
+  if (!helpCenterContent || !CONFIG.helpCenter) return;
+
+  helpCenterContent.innerHTML = Templates.faqSection(CONFIG.helpCenter.faq);
+}
+
+/**
+ * Render knowledge base
+ */
+function renderKnowledgeBase() {
+  const knowledgeBaseContent = DOM.select('#knowledgeBaseContent');
+  if (!knowledgeBaseContent || !CONFIG.knowledgeBase) return;
+
+  knowledgeBaseContent.innerHTML = CONFIG.knowledgeBase.articles
+    .map(article => Templates.kbArticle(article))
+    .join('');
+}
+
+/**
+ * Render store section
+ */
+function renderStore() {
+  const storeContent = DOM.select('#storeContent');
+  if (!storeContent || !CONFIG.store) return;
+
+  storeContent.innerHTML = Templates.storeSection(CONFIG.store);
 }
 
 /**

@@ -106,9 +106,44 @@ const Templates = {
   `,
 
   /**
-   * Navigation Links Template (Minimalist)
+   * Navigation Links Template (with dropdown support)
    */
-  navLink: (navItem) => `<li><a href="${navItem.href}">${navItem.label}</a></li>`,
+  navLink: (navItem) => {
+    if (navItem.children && navItem.children.length > 0) {
+      // Parent menu item with children
+      const childrenHTML = navItem.children.map(child => {
+        if (child.children && child.children.length > 0) {
+          // Nested submenu (3-level)
+          const nestedChildren = child.children
+            .map(nested => `<li><a href="${nested.href}">${nested.label}</a></li>`)
+            .join('');
+          return `
+            <li class="nav-submenu-parent">
+              <span class="nav-submenu-title">${child.label}</span>
+              <ul class="nav-submenu-nested">
+                ${nestedChildren}
+              </ul>
+            </li>
+          `;
+        } else {
+          // Regular submenu item
+          return `<li><a href="${child.href}">${child.label}</a></li>`;
+        }
+      }).join('');
+
+      return `
+        <li class="nav-item-parent">
+          <a href="${navItem.href}" class="nav-parent-link">${navItem.label}</a>
+          <ul class="nav-dropdown">
+            ${childrenHTML}
+          </ul>
+        </li>
+      `;
+    } else {
+      // Simple menu item without children
+      return `<li><a href="${navItem.href}">${navItem.label}</a></li>`;
+    }
+  },
 
   /**
    * Footer Section Template
@@ -423,6 +458,139 @@ const Templates = {
       <button class="google-auth-btn" id="googleSignupBtn" onclick="window.appManager.userManager.signUpWithGoogle()">
         🔐 Sign Up with Google
       </button>
+    </div>
+  `,
+
+  /**
+   * Team Member Card Template
+   */
+  teamMember: (member) => `
+    <div class="team-member-card">
+      <div class="member-icon">${member.icon}</div>
+      <h3>${member.name}</h3>
+      <p class="member-role">${member.role}</p>
+      <p class="member-bio">${member.bio}</p>
+    </div>
+  `,
+
+  /**
+   * Vision Section Template
+   */
+  visionSection: (vision) => `
+    <div class="vision-container">
+      <div class="vision-box mission-box">
+        <h3>${vision.mission.icon} ${vision.mission.title}</h3>
+        <p>${vision.mission.description}</p>
+      </div>
+      <div class="vision-box vision-box">
+        <h3>${vision.vision.icon} ${vision.vision.title}</h3>
+        <p>${vision.vision.description}</p>
+      </div>
+      <div class="values-grid">
+        ${vision.values.map(value => `
+          <div class="value-card">
+            <div class="value-icon">${value.icon}</div>
+            <h4>${value.title}</h4>
+            <p>${value.description}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `,
+
+  /**
+   * Service Card Template
+   */
+  serviceCard: (service) => `
+    <div class="service-card">
+      <div class="service-icon">${service.icon}</div>
+      <h3>${service.title}</h3>
+      <p>${service.description}</p>
+      <a href="${service.href}" class="service-link">Learn More →</a>
+    </div>
+  `,
+
+  /**
+   * Service Detail Section Template
+   */
+  serviceDetailSection: (service) => `
+    <div class="service-detail-container">
+      <p class="service-description">${service.description}</p>
+      <div class="service-features-grid">
+        ${service.features.map(feature => `
+          <div class="feature-item">
+            <div class="feature-icon">${feature.icon}</div>
+            <h4>${feature.title}</h4>
+            <p>${feature.description}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `,
+
+  /**
+   * FAQ Section Template
+   */
+  faqSection: (faqs) => `
+    <div class="faq-container">
+      ${faqs.map((faq, index) => `
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFAQ(${index})">
+            <span>${faq.question}</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer" id="faq-${index}">
+            <p>${faq.answer}</p>
+            <span class="faq-category">${faq.category}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `,
+
+  /**
+   * Knowledge Base Article Template
+   */
+  kbArticle: (article) => `
+    <div class="kb-article-card">
+      <div class="kb-icon">${article.icon}</div>
+      <h4>${article.title}</h4>
+      <p class="kb-category">${article.category}</p>
+      <p>${article.content}</p>
+      <a href="#" class="kb-link">Read Full Article →</a>
+    </div>
+  `,
+
+  /**
+   * Store Section Template
+   */
+  storeSection: (store) => `
+    <div class="store-container">
+      <div class="store-highlights">
+        ${store.highlights.map(highlight => `
+          <div class="highlight-card">
+            <div class="highlight-icon">${highlight.icon}</div>
+            <h4>${highlight.title}</h4>
+            <p>${highlight.description}</p>
+          </div>
+        `).join('')}
+      </div>
+      <div class="store-section">
+        <h3>Featured Accessories</h3>
+        <div class="accessories-grid">
+          ${store.accessories.map(accessory => `
+            <div class="accessory-card">
+              <div class="accessory-icon">${accessory.icon}</div>
+              <h4>${accessory.name}</h4>
+              <p>${accessory.description}</p>
+              <div class="accessory-footer">
+                <span class="price">${Format.currency(accessory.price)}</span>
+                <button class="add-btn" onclick="window.appManager.cartManager.addItem('${accessory.name.toLowerCase().replace(/\\s+/g, '-')}', 1)">Add</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
     </div>
   `,
 };
