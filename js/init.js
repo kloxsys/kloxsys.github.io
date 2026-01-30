@@ -19,9 +19,6 @@ function initializePage() {
   // Render Products
   renderProducts();
 
-  // Render Explore Tabs
-  renderExploreTabs();
-
   // Render About Section
   renderAboutSection();
 
@@ -209,20 +206,6 @@ function renderPaymentOptions() {
   paymentOptions.innerHTML = CONFIG.paymentMethods
     .map((method, index) => Templates.paymentOption(method, index === 0))
     .join('');
-}
-
-/**
- * Render explore tabs section
- */
-function renderExploreTabs() {
-  const exploreTabs = DOM.select('#exploreTabs');
-  if (!exploreTabs || !CONFIG.exploreTabs) return;
-
-  exploreTabs.innerHTML = Templates.tabsContainer(
-    CONFIG.exploreTabs.title,
-    CONFIG.exploreTabs.description,
-    CONFIG.exploreTabs.tabs
-  );
 }
 
 /**
