@@ -29,9 +29,6 @@ const Templates = {
             <button class="buy-button" onclick="window.appManager.cartManager.addItem('${product.id}', 1)" title="Add to Cart">
               🛒 Add to Cart
             </button>
-            <button class="buy-button secondary" onclick="openPreOrder('${product.id}')" title="Pre-order">
-              📋 Pre-Order
-            </button>
           </div>
         </div>
       </div>
@@ -448,13 +445,76 @@ const Templates = {
       <button class="auth-tab-btn" data-tab="signup" onclick="window.switchAuthTab('signup')">Sign Up</button>
     </div>
     <div id="login-tab" class="auth-tab-content active">
-      <p class="auth-description">Sign in with your Google account</p>
+      <p class="auth-description">Sign in to your account</p>
+      
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email">
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password">
+      </div>
+      <button class="submit-button" onclick="if(window.appManager.userManager.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)) { window.appManager.userManager.saveUser(); window.appManager.modalManager.closeModal('authModal'); window.appManager.userManager.refreshUI(); } else { alert('Invalid email or password'); }">
+        Sign In
+      </button>
+
+      <div class="auth-divider">or</div>
+
       <button class="google-auth-btn" id="googleLoginBtn" onclick="window.appManager.userManager.signInWithGoogle()">
         🔐 Sign In with Google
       </button>
     </div>
     <div id="signup-tab" class="auth-tab-content">
-      <p class="auth-description">Create an account with Google</p>
+      <p class="auth-description">Create a new account</p>
+      
+      <div class="form-group">
+        <label for="signupName">Full Name</label>
+        <input type="text" id="signupName" placeholder="Enter your full name">
+      </div>
+      <div class="form-group">
+        <label for="signupEmail">Email</label>
+        <input type="email" id="signupEmail" placeholder="Enter your email">
+      </div>
+      <div class="form-group">
+        <label for="signupPassword">Password</label>
+        <input type="password" id="signupPassword" placeholder="Create a password (min 6 chars)">
+      </div>
+      <div class="form-group">
+        <label for="signupConfirm">Confirm Password</label>
+        <input type="password" id="signupConfirm" placeholder="Confirm your password">
+      </div>
+      <button class="submit-button" onclick="
+        const name = document.getElementById('signupName').value;
+        const email = document.getElementById('signupEmail').value;
+        const pwd = document.getElementById('signupPassword').value;
+        const confirm = document.getElementById('signupConfirm').value;
+        
+        if(!name || !email || !pwd) { 
+          alert('All fields are required');
+          return;
+        }
+        if(pwd.length < 6) { 
+          alert('Password must be at least 6 characters');
+          return;
+        }
+        if(pwd !== confirm) { 
+          alert('Passwords do not match');
+          return;
+        }
+        
+        if(window.appManager.userManager.register(email, pwd, name)) {
+          window.appManager.userManager.saveUser();
+          window.appManager.modalManager.closeModal('authModal');
+          window.appManager.userManager.refreshUI();
+          alert('Registration successful! Welcome ' + name);
+        }
+      ">
+        Sign Up
+      </button>
+
+      <div class="auth-divider">or</div>
+
       <button class="google-auth-btn" id="googleSignupBtn" onclick="window.appManager.userManager.signUpWithGoogle()">
         🔐 Sign Up with Google
       </button>
@@ -590,6 +650,154 @@ const Templates = {
             </div>
           `).join('')}
         </div>
+      </div>
+    </div>
+  `,
+
+  /**
+   * Profile Page Template
+   */
+  profilePage: (user) => `
+    <div class="profile-page">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          ${user.photoUrl ? `<img src="${user.photoUrl}" alt="${user.displayName}">` : '<div class="avatar-placeholder">👤</div>'}
+        </div>
+        <div class="profile-info">
+          <h3>${user.displayName}</h3>
+          <p>${user.email}</p>
+          <p class="account-since">Member since ${new Date(user.createdAt).toLocaleDateString()}</p>
+        </div>
+      </div>
+      
+      <div class="profile-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="displayName" value="${user.displayName}" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" value="${user.email}" disabled placeholder="Your email">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="phoneNumber" value="${user.phoneNumber || ''}" placeholder="Enter your phone number">
+        </div>
+        <button class="submit-button" onclick="window.appManager.userManager.updateProfile(document.getElementById('displayName').value, document.getElementById('phoneNumber').value); alert('Profile updated successfully!'); closeModal('profileModal')">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  `,
+
+  /**
+   * Orders Page Template
+   */
+  ordersPage: (orders) => `
+    <div class="orders-page">
+      ${orders.length > 0 ? `
+        <div class="orders-list">
+          ${orders.map(order => `
+            <div class="order-card">
+              <div class="order-header">
+                <span class="order-id">Order #${order.id.substring(4, 10).toUpperCase()}</span>
+                <span class="order-status status-${order.status}">${order.status.toUpperCase()}</span>
+              </div>
+              <div class="order-details">
+                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                <p><strong>Items:</strong> ${order.items || 'N/A'}</p>
+                <p><strong>Total:</strong> ${Format.currency(order.total || 0)}</p>
+                ${order.address ? `<p><strong>Delivery:</strong> ${order.address}</p>` : ''}
+              </div>
+              <button class="buy-button" onclick="alert('Order details: ${order.id}')">View Details</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="empty-state">
+          <p>📦 No orders yet</p>
+          <p>Your orders will appear here once you make a purchase</p>
+          <a href="#products" class="cta-button" onclick="closeModal('ordersModal')">Start Shopping</a>
+        </div>
+      `}
+    </div>
+  `,
+
+  /**
+   * Address Management Page Template
+   */
+  addressPage: (addresses) => `
+    <div class="address-page">
+      <div class="add-address-form">
+        <h3>Add New Address</h3>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="addrName" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="addrPhone" placeholder="Enter phone number">
+        </div>
+        <div class="form-group">
+          <label>Address Line 1</label>
+          <input type="text" id="addrLine1" placeholder="Street address">
+        </div>
+        <div class="form-group">
+          <label>Address Line 2</label>
+          <input type="text" id="addrLine2" placeholder="Apartment, suite, etc. (optional)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" id="addrCity" placeholder="City">
+          </div>
+          <div class="form-group">
+            <label>State/Province</label>
+            <input type="text" id="addrState" placeholder="State">
+          </div>
+          <div class="form-group">
+            <label>Postal Code</label>
+            <input type="text" id="addrZip" placeholder="ZIP/Postal code">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" id="addrCountry" placeholder="Country">
+        </div>
+        <button class="submit-button" onclick="window.appManager.userManager.addAddress({
+          name: document.getElementById('addrName').value,
+          phone: document.getElementById('addrPhone').value,
+          line1: document.getElementById('addrLine1').value,
+          line2: document.getElementById('addrLine2').value,
+          city: document.getElementById('addrCity').value,
+          state: document.getElementById('addrState').value,
+          zip: document.getElementById('addrZip').value,
+          country: document.getElementById('addrCountry').value,
+        }); alert('Address added successfully!'); window.appManager.userManager.showAddressPage()">
+          Add Address
+        </button>
+      </div>
+
+      <div class="saved-addresses">
+        <h3>Saved Addresses</h3>
+        ${addresses.length > 0 ? `
+          ${addresses.map(addr => `
+            <div class="address-card">
+              <div class="address-info">
+                <p><strong>${addr.name}</strong></p>
+                <p>${addr.line1}${addr.line2 ? ', ' + addr.line2 : ''}</p>
+                <p>${addr.city}, ${addr.state} ${addr.zip}</p>
+                <p>${addr.country}</p>
+                <p>📱 ${addr.phone}</p>
+              </div>
+              <div class="address-actions">
+                <button class="buy-button secondary" onclick="window.appManager.userManager.deleteAddress('${addr.id}'); window.appManager.userManager.showAddressPage()">Delete</button>
+              </div>
+            </div>
+          `).join('')}
+        ` : `
+          <p class="empty-message">No saved addresses yet. Add one above.</p>
+        `}
       </div>
     </div>
   `,

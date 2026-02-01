@@ -39,6 +39,16 @@
             </div>
             <ul class="nav-links" id="navLinks"></ul>
         </nav>
+        
+        <!-- User Widget - Top Right Corner -->
+        <div id="userWidget" class="user-widget">
+            <div class="user-widget-content">
+                <button class="user-widget-signin" id="signInBtn" onclick="window.appManager.userManager.openAuth()">
+                    <span class="signin-icon">👤</span>
+                    <span class="signin-text">Sign In</span>
+                </button>
+            </div>
+        </div>
     </header>
 
     <!-- ============================================
@@ -136,6 +146,13 @@
     <section class="knowledge-base" id="knowledge-base">
         <h2>Knowledge Base</h2>
         <div class="kb-grid" id="knowledgeBaseContent"></div>
+    </section>
+
+    <!-- ============================================
+         USER ACCOUNT SECTION
+         ============================================ -->
+    <section class="user-account" id="userAccount">
+        <div id="userAccountWidget"></div>
     </section>
 
     <!-- ============================================

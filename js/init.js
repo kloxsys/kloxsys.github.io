@@ -313,6 +313,66 @@ function renderKnowledgeBase() {
 }
 
 /**
+ * Render user account section
+ */
+function renderUserAccount() {
+  const userAccountWidget = DOM.select('#userAccountWidget');
+  if (!userAccountWidget) {
+    console.error('userAccountWidget not found');
+    return;
+  }
+
+  // Check if user is logged in by looking at localStorage
+  const userDataStr = localStorage.getItem('klox_user');
+  
+  if (userDataStr) {
+    // User is logged in
+    try {
+      const user = JSON.parse(userDataStr);
+      const memberDate = new Date(user.createdAt).toLocaleDateString();
+      const html = `
+        <div class="user-account-card">
+          <div class="user-account-header">
+            <div class="user-avatar-large">
+              ${user.photoUrl ? `<img src="${user.photoUrl}" alt="${user.displayName}">` : '👤'}
+            </div>
+            <div class="user-account-info">
+              <h3 class="user-account-name">${user.displayName}</h3>
+              <p class="user-account-email">${user.email}</p>
+              <p class="user-account-member">Member since ${memberDate}</p>
+            </div>
+          </div>
+          <div class="user-account-actions">
+            <button class="btn-primary" onclick="window.appManager.userManager.openProfile(event)">View Profile</button>
+            <button class="btn-secondary" onclick="window.appManager.userManager.openSettings(event)">Manage Addresses</button>
+            <button class="btn-secondary" onclick="window.appManager.userManager.openOrders(event)">Order History</button>
+            <button class="btn-secondary" onclick="window.appManager.userManager.logout()">Sign Out</button>
+          </div>
+        </div>
+      `;
+      userAccountWidget.innerHTML = html;
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+    }
+  } else {
+    // User is not logged in - show sign in card
+    const html = `
+      <div class="user-account-card user-account-signin">
+        <div class="signin-card-content">
+          <h3>Welcome Back!</h3>
+          <p>Sign in to your account to view orders, manage addresses, and more.</p>
+          <button class="btn-primary-large" onclick="window.appManager.userManager.openAuth()">
+            <span class="signin-icon">👤</span>
+            <span>Sign In / Create Account</span>
+          </button>
+        </div>
+      </div>
+    `;
+    userAccountWidget.innerHTML = html;
+  }
+}
+
+/**
  * Render store section
  */
 function renderStore() {
@@ -395,6 +455,37 @@ window.submitSupportRequest = function (event) {
   if (event) event.preventDefault();
   if (window.appManager && window.appManager.supportManager) {
     window.appManager.supportManager.submitSupportRequest();
+  }
+};
+
+/**
+ * Switch authentication tab
+ */
+window.switchAuthTab = function (tab) {
+  const loginTab = DOM.select('#login-tab');
+  const signupTab = DOM.select('#signup-tab');
+  const loginBtn = DOM.select('[data-tab="login"]');
+  const signupBtn = DOM.select('[data-tab="signup"]');
+
+  if (tab === 'login') {
+    loginTab.classList.add('active');
+    signupTab.classList.remove('active');
+    loginBtn.classList.add('active');
+    signupBtn.classList.remove('active');
+  } else {
+    signupTab.classList.add('active');
+    loginTab.classList.remove('active');
+    signupBtn.classList.add('active');
+    loginBtn.classList.remove('active');
+  }
+};
+
+/**
+ * Close modal global function
+ */
+window.closeModal = function (modalId) {
+  if (window.appManager && window.appManager.modalManager) {
+    window.appManager.modalManager.closeModal(modalId);
   }
 };
 

@@ -600,28 +600,42 @@ class UserManager {
    * Setup auth UI in header
    */
   setupAuthUI() {
-    const nav = DOM.select('nav .nav-links');
-    if (!nav) return;
-
-    const authContainer = nav.parentElement;
+    const signInBtn = DOM.select('#signInBtn');
+    const userWidget = DOM.select('#userWidget');
+    console.log('setupAuthUI called, button found:', !!signInBtn, 'widget found:', !!userWidget);
+    
+    if (!userWidget) {
+      console.error('userWidget not found in DOM');
+      return;
+    }
     
     if (this.isLoggedIn()) {
-      // Show user menu
+      // Show user menu widget in header - replace button with user info
       const userMenuHTML = `
-        <div class="user-profile-btn" onclick="window.appManager.userManager.toggleUserMenu()">
-          👤 ${this.user.displayName?.split(' ')[0] || 'User'}
+        <div class="user-widget-content">
+          <div class="user-widget-header">
+            <div class="user-avatar-small">
+              ${this.user.photoUrl ? `<img src="${this.user.photoUrl}" alt="${this.user.displayName}">` : '👤'}
+            </div>
+            <div class="user-widget-info">
+              <p class="user-widget-name">${this.user.displayName?.split(' ')[0] || 'User'}</p>
+              <p class="user-widget-email">${this.user.email}</p>
+            </div>
+            <button class="user-widget-menu-btn" onclick="window.appManager.userManager.toggleUserMenu()" title="Menu">⋮</button>
+          </div>
           <div id="userMenuDropdown" class="user-menu-dropdown" style="display: none;">
-            ${Templates.userMenu(this.user)}
+            <a href="#" onclick="window.appManager.userManager.openProfile(event)">Profile</a>
+            <a href="#" onclick="window.appManager.userManager.openSettings(event)">Addresses</a>
+            <a href="#" onclick="window.appManager.userManager.openOrders(event)">Orders</a>
+            <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border);">
+            <a href="#" onclick="window.appManager.userManager.logout()">Sign Out</a>
           </div>
         </div>
       `;
-      authContainer.insertAdjacentHTML('beforeend', userMenuHTML);
-    } else {
-      // Show auth button
-      const authBtnHTML = `
-        <button class="auth-btn" onclick="window.appManager.userManager.openAuth()">Sign In</button>
-      `;
-      authContainer.insertAdjacentHTML('beforeend', authBtnHTML);
+      userWidget.innerHTML = userMenuHTML;
+    } else if (signInBtn) {
+      // Button already exists, just make sure it's visible
+      signInBtn.style.display = 'flex';
     }
   }
 
@@ -703,27 +717,229 @@ class UserManager {
   }
 
   /**
-   * Open user profile
+   * Open user profile page
    */
   openProfile(event) {
     if (event) event.preventDefault();
-    alert(`Profile: ${this.user.displayName}\nEmail: ${this.user.email}`);
+    window.appManager.modalManager.openModal('profileModal') || this.showProfilePage();
   }
 
   /**
-   * Open user orders
+   * Open user orders page
    */
   openOrders(event) {
     if (event) event.preventDefault();
-    alert('Your orders will appear here');
+    window.appManager.modalManager.openModal('ordersModal') || this.showOrdersPage();
   }
 
   /**
-   * Open settings
+   * Open settings/addresses page
    */
   openSettings(event) {
     if (event) event.preventDefault();
-    alert('Settings page coming soon');
+    window.appManager.modalManager.openModal('addressModal') || this.showAddressPage();
+  }
+
+  /**
+   * Show profile page
+   */
+  showProfilePage() {
+    const profileModal = `
+      <div id="profileModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>My Profile</h2>
+            <button class="close-modal" onclick="closeModal('profileModal')">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${Templates.profilePage(this.user)}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', profileModal);
+    window.appManager.modalManager.openModal('profileModal');
+  }
+
+  /**
+   * Show orders page
+   */
+  showOrdersPage() {
+    const orders = this.getOrderHistory();
+    const ordersModal = `
+      <div id="ordersModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>My Orders</h2>
+            <button class="close-modal" onclick="closeModal('ordersModal')">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${Templates.ordersPage(orders)}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', ordersModal);
+    window.appManager.modalManager.openModal('ordersModal');
+  }
+
+  /**
+   * Show address management page
+   */
+  showAddressPage() {
+    const addresses = this.getAddresses();
+    const addressModal = `
+      <div id="addressModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>My Addresses</h2>
+            <button class="close-modal" onclick="closeModal('addressModal')">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${Templates.addressPage(addresses)}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', addressModal);
+    window.appManager.modalManager.openModal('addressModal');
+  }
+
+  /**
+   * Add new address
+   */
+  addAddress(addressData) {
+    if (!this.user.addresses) {
+      this.user.addresses = [];
+    }
+    const newAddress = {
+      id: 'addr_' + Math.random().toString(36).substr(2, 9),
+      ...addressData,
+      createdAt: new Date().toISOString(),
+    };
+    this.user.addresses.push(newAddress);
+    this.saveUser();
+    Logger.info('Address added', { id: newAddress.id });
+    return newAddress;
+  }
+
+  /**
+   * Update address
+   */
+  updateAddress(addressId, addressData) {
+    if (!this.user.addresses) return false;
+    const index = this.user.addresses.findIndex(a => a.id === addressId);
+    if (index > -1) {
+      this.user.addresses[index] = { ...this.user.addresses[index], ...addressData };
+      this.saveUser();
+      Logger.info('Address updated', { id: addressId });
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Delete address
+   */
+  deleteAddress(addressId) {
+    if (!this.user.addresses) return false;
+    this.user.addresses = this.user.addresses.filter(a => a.id !== addressId);
+    this.saveUser();
+    Logger.info('Address deleted', { id: addressId });
+    return true;
+  }
+
+  /**
+   * Get all addresses
+   */
+  getAddresses() {
+    return this.user?.addresses || [];
+  }
+
+  /**
+   * Add order to history
+   */
+  addOrder(orderData) {
+    if (!this.user.orders) {
+      this.user.orders = [];
+    }
+    const newOrder = {
+      id: 'ord_' + Math.random().toString(36).substr(2, 9),
+      ...orderData,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    this.user.orders.push(newOrder);
+    this.saveUser();
+    Logger.info('Order added', { id: newOrder.id });
+    return newOrder;
+  }
+
+  /**
+   * Get order history
+   */
+  getOrderHistory() {
+    return this.user?.orders || [];
+  }
+
+  /**
+   * Register new user
+   */
+  register(email, password, displayName) {
+    if (!email || !password || !displayName) {
+      Logger.error('Missing required fields');
+      return false;
+    }
+    
+    this.user = {
+      id: 'user_' + Math.random().toString(36).substr(2, 9),
+      email,
+      displayName,
+      password: btoa(password), // Simple encoding (not production-safe)
+      photoUrl: null,
+      addresses: [],
+      orders: [],
+      createdAt: new Date().toISOString(),
+    };
+    
+    this.saveUser();
+    Logger.info('User registered', { email });
+    Analytics.trackEvent('user_registered');
+    return true;
+  }
+
+  /**
+   * Login with email and password
+   */
+  login(email, password) {
+    // In production, this would call a backend API
+    // For now, we'll check if user exists and password matches
+    const savedUser = Storage.get(CONFIG.user.storageKey);
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      if (user.email === email && user.password === btoa(password)) {
+        this.user = user;
+        Logger.info('User logged in', { email });
+        Analytics.trackEvent('user_logged_in');
+        return true;
+      }
+    }
+    Logger.error('Invalid email or password');
+    return false;
+  }
+
+  /**
+   * Update profile
+   */
+  updateProfile(displayName, phoneNumber) {
+    if (this.user) {
+      this.user.displayName = displayName;
+      this.user.phoneNumber = phoneNumber;
+      this.saveUser();
+      Logger.info('Profile updated');
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -873,8 +1089,20 @@ window.toggleFAQ = function(index) {
 // Wait for DOM to be ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired, creating AppManager');
     window.appManager = new AppManager();
+    console.log('AppManager created, calling setupAuthUI in 100ms');
+    setTimeout(() => {
+      console.log('Calling setupAuthUI now');
+      window.appManager.userManager.setupAuthUI();
+    }, 100);
   });
 } else {
+  console.log('DOM already loaded, creating AppManager');
   window.appManager = new AppManager();
+  console.log('AppManager created, calling setupAuthUI in 100ms');
+  setTimeout(() => {
+    console.log('Calling setupAuthUI now');
+    window.appManager.userManager.setupAuthUI();
+  }, 100);
 }
