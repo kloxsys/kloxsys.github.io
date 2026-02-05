@@ -323,12 +323,14 @@ function renderUserAccount() {
   }
 
   // Check if user is logged in by looking at localStorage
-  const userDataStr = localStorage.getItem('klox_user');
+  const rawUserData = localStorage.getItem('klox_user');
   
-  if (userDataStr) {
+  if (rawUserData) {
     // User is logged in
     try {
-      const user = JSON.parse(userDataStr);
+      // Support both legacy double‑JSON format and new single‑JSON format
+      let parsed = JSON.parse(rawUserData);
+      const user = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
       const memberDate = new Date(user.createdAt).toLocaleDateString();
       const html = `
         <div class="user-account-card">

@@ -360,7 +360,22 @@ class CartManager {
    */
   loadCart() {
     const saved = Storage.get(CONFIG.cart.storageKey);
-    this.items = saved ? JSON.parse(saved) : [];
+
+    if (!saved) {
+      this.items = [];
+    } else if (Array.isArray(saved)) {
+      // New format: Storage.get already returns parsed array
+      this.items = saved;
+    } else {
+      // Backwards compatibility: old format stored JSON string inside JSON
+      try {
+        this.items = JSON.parse(saved);
+      } catch (error) {
+        Logger.error('Failed to parse saved cart data', error);
+        this.items = [];
+      }
+    }
+
     this.updateCartIcon();
   }
 
@@ -368,7 +383,8 @@ class CartManager {
    * Save cart to local storage
    */
   saveCart() {
-    Storage.set(CONFIG.cart.storageKey, JSON.stringify(this.items));
+    // Store as plain array; Storage helper will JSON.stringify
+    Storage.set(CONFIG.cart.storageKey, this.items);
     this.updateCartIcon();
     Analytics.trackEvent('cart_updated', { itemCount: this.items.length });
   }
@@ -577,7 +593,22 @@ class UserManager {
    */
   loadUser() {
     const saved = Storage.get(CONFIG.user.storageKey);
-    this.user = saved ? JSON.parse(saved) : null;
+
+    if (!saved) {
+      this.user = null;
+    } else if (typeof saved === 'string') {
+      // Backwards compatibility: old format stored JSON string inside JSON
+      try {
+        this.user = JSON.parse(saved);
+      } catch (error) {
+        Logger.error('Failed to parse saved user data', error);
+        this.user = null;
+      }
+    } else {
+      // New format: Storage.get already returns parsed object
+      this.user = saved;
+    }
+
     this.updateUserUI();
   }
 
@@ -585,7 +616,8 @@ class UserManager {
    * Save user to local storage
    */
   saveUser() {
-    Storage.set(CONFIG.user.storageKey, JSON.stringify(this.user));
+    // Store as plain object; Storage helper will JSON.stringify
+    Storage.set(CONFIG.user.storageKey, this.user);
     this.updateUserUI();
   }
 
@@ -966,15 +998,28 @@ class UserManager {
     // In production, this would call a backend API
     // For now, we'll check if user exists and password matches
     const savedUser = Storage.get(CONFIG.user.storageKey);
+    let user = null;
+
     if (savedUser) {
-      const user = JSON.parse(savedUser);
-      if (user.email === email && user.password === btoa(password)) {
-        this.user = user;
-        Logger.info('User logged in', { email });
-        Analytics.trackEvent('user_logged_in');
-        return true;
+      if (typeof savedUser === 'string') {
+        // Backwards compatibility with older double‑JSON format
+        try {
+          user = JSON.parse(savedUser);
+        } catch (error) {
+          Logger.error('Failed to parse saved user for login', error);
+        }
+      } else {
+        user = savedUser;
       }
     }
+
+    if (user && user.email === email && user.password === btoa(password)) {
+      this.user = user;
+      Logger.info('User logged in', { email });
+      Analytics.trackEvent('user_logged_in');
+      return true;
+    }
+
     Logger.error('Invalid email or password');
     return false;
   }
@@ -1214,6 +1259,7 @@ window.handleSignInClick = function() {
 
 console.log('=== APP STARTUP SEQUENCE ===');
 console.log('Step 1: Checking if DOM is already loaded...');
+console.log('document.readyState:', document.readyState);
 
 // Create AppManager immediately when script loads
 try {
@@ -1223,10 +1269,11 @@ try {
   window.appManagerReady = true;
 } catch (error) {
   console.error('❌ CRITICAL: Failed to create AppManager:', error);
+  console.error('Stack:', error.stack);
   window.appManagerReady = false;
   // Try to show error to user
   setTimeout(() => {
-    alert('Critical error: Application failed to initialize. Please refresh the page.');
+    alert('Critical error: Application failed to initialize. Please refresh the page.\n\nError: ' + error.message);
   }, 1000);
 }
 
@@ -1234,14 +1281,22 @@ try {
 function setupAppUI() {
   try {
     console.log('Step 3: Setting up UI...');
-    if (window.appManager && window.appManager.userManager) {
-      window.appManager.userManager.setupAuthUI();
-      console.log('✓ setupAuthUI completed');
+    if (window.appManager) {
+      console.log('  - AppManager exists');
+      if (window.appManager.userManager) {
+        console.log('  - UserManager exists');
+        console.log('  - Calling setupAuthUI()...');
+        window.appManager.userManager.setupAuthUI();
+        console.log('✓ setupAuthUI completed');
+      } else {
+        console.error('  - ERROR: UserManager not available');
+      }
     } else {
-      console.error('AppManager or UserManager not available for UI setup');
+      console.error('  - ERROR: AppManager not available');
     }
   } catch (error) {
     console.error('Error in setupAppUI:', error);
+    console.error('Stack:', error.stack);
   }
 }
 
@@ -1249,9 +1304,15 @@ function setupAppUI() {
 console.log('Step 2b: Checking document.readyState:', document.readyState);
 if (document.readyState === 'loading') {
   console.log('DOM still loading, attaching DOMContentLoaded listener');
-  document.addEventListener('DOMContentLoaded', setupAppUI);
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired');
+    setupAppUI();
+  });
 } else {
   // DOM is already loaded
   console.log('DOM already loaded, running setupAppUI immediately');
-  setupAppUI();
+  // Add small delay to ensure scripts are truly loaded
+  setTimeout(setupAppUI, 100);
 }
+
+console.log('=== APP.JS SCRIPT EXECUTION COMPLETE ===');
