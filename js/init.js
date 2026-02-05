@@ -323,15 +323,14 @@ function renderUserAccount() {
   }
 
   // Check if user is logged in by looking at localStorage
-  const rawUserData = localStorage.getItem('klox_user');
+  const userManager = window.appManager && window.appManager.userManager;
+  const user = userManager && userManager.user;
   
-  if (rawUserData) {
-    // User is logged in
+  if (user) {
     try {
-      // Support both legacy double‑JSON format and new single‑JSON format
-      let parsed = JSON.parse(rawUserData);
-      const user = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
-      const memberDate = new Date(user.createdAt).toLocaleDateString();
+      const memberDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '';
+      const addressCount = Array.isArray(user.addresses) ? user.addresses.length : 0;
+      const orderCount = Array.isArray(user.orders) ? user.orders.length : 0;
       const html = `
         <div class="user-account-card">
           <div class="user-account-header">
@@ -341,7 +340,17 @@ function renderUserAccount() {
             <div class="user-account-info">
               <h3 class="user-account-name">${user.displayName}</h3>
               <p class="user-account-email">${user.email}</p>
-              <p class="user-account-member">Member since ${memberDate}</p>
+              ${memberDate ? `<p class="user-account-member">Member since ${memberDate}</p>` : ''}
+            </div>
+          </div>
+          <div class="user-dashboard-metrics">
+            <div class="metric-card">
+              <span class="metric-label">Saved Addresses</span>
+              <span class="metric-value">${addressCount}</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Orders</span>
+              <span class="metric-value">${orderCount}</span>
             </div>
           </div>
           <div class="user-account-actions">

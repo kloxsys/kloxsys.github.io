@@ -577,6 +577,7 @@ class CartManager {
 class UserManager {
   constructor() {
     this.user = null;
+    this.authUnsubscribe = null;
     this.init();
   }
 
@@ -584,12 +585,82 @@ class UserManager {
    * Initialize user manager
    */
   init() {
-    this.loadUser();
-    this.setupAuthUI();
+    // Subscribe to real auth state if available
+    if (window.AuthService && AuthService.onAuthStateChanged) {
+      this.authUnsubscribe = AuthService.onAuthStateChanged((firebaseUser) => {
+        this.handleAuthChange(firebaseUser);
+      });
+    } else {
+      // Fallback to legacy local user if AuthService not configured
+      this.loadUser();
+      this.setupAuthUI();
+    }
   }
 
   /**
-   * Load user from local storage
+   * Handle Firebase auth state changes
+   */
+  handleAuthChange(firebaseUser) {
+    if (firebaseUser) {
+      // Map Firebase user to local user object
+      const previous = this.user || {};
+      this.user = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+        photoUrl: firebaseUser.photoURL,
+        phoneNumber: firebaseUser.phoneNumber || '',
+        createdAt: firebaseUser.metadata?.creationTime || new Date().toISOString(),
+        // Preserve any already-loaded extended data in memory
+        addresses: previous.addresses || [],
+        orders: previous.orders || [],
+      };
+
+      // Load extended profile and orders/addresses from Firestore
+      if (window.DbService) {
+        DbService.getUserProfile(firebaseUser.uid)
+          .then((profile) => {
+            if (profile) {
+              this.user = {
+                ...this.user,
+                phoneNumber: profile.phoneNumber || this.user.phoneNumber,
+                addresses: profile.addresses || this.user.addresses || [],
+                orders: profile.orders || this.user.orders || [],
+              };
+            }
+            // Persist snapshot locally for faster dashboard rendering
+            this.saveUser();
+          })
+          .catch((error) => {
+            console.error('Failed to load user profile from Firestore', error);
+          });
+      } else {
+        // Persist extended profile (local-only) if DbService is unavailable
+        this.saveUser();
+      }
+
+      Logger.info('Auth state: logged in', { email: this.user.email });
+      Analytics.trackEvent('user_signed_in');
+    } else {
+      Logger.info('Auth state: logged out');
+      this.user = null;
+      Storage.remove(CONFIG.user.storageKey);
+    }
+
+    // Update header widget & dashboard
+    this.setupAuthUI();
+    try {
+      // Re-render user account dashboard if renderer exists
+      if (typeof renderUserAccount === 'function') {
+        renderUserAccount();
+      }
+    } catch (e) {
+      // Ignore render errors here
+    }
+  }
+
+  /**
+   * Load extended user profile from local storage (non-auth data)
    */
   loadUser() {
     const saved = Storage.get(CONFIG.user.storageKey);
@@ -613,11 +684,32 @@ class UserManager {
   }
 
   /**
-   * Save user to local storage
+   * Save extended user profile to local storage (non-auth data)
    */
   saveUser() {
-    // Store as plain object; Storage helper will JSON.stringify
-    Storage.set(CONFIG.user.storageKey, this.user);
+    if (!this.user) return;
+    const snapshot = {
+      uid: this.user.uid,
+      email: this.user.email,
+      displayName: this.user.displayName,
+      photoUrl: this.user.photoUrl,
+      phoneNumber: this.user.phoneNumber || '',
+      addresses: this.user.addresses || [],
+      orders: this.user.orders || [],
+      createdAt: this.user.createdAt,
+    };
+
+    // Store as plain object locally; Storage helper will JSON.stringify
+    Storage.set(CONFIG.user.storageKey, snapshot);
+
+    // Mirror profile into Firestore when available (addresses/orders have
+    // their own subcollections but we keep a summary copy here for quick reads)
+    if (window.DbService && this.user.uid) {
+      DbService.saveUserProfile(this.user.uid, snapshot).catch((error) => {
+        console.error('Failed to save user profile to Firestore', error);
+      });
+    }
+
     this.updateUserUI();
   }
 
@@ -750,28 +842,26 @@ class UserManager {
    * Sign in with Google
    */
   signInWithGoogle() {
-    // Simulate Google OAuth flow
-    // In production, use Firebase or proper OAuth implementation
-    this.user = {
-      id: 'user_' + Math.random().toString(36).substr(2, 9),
-      email: 'user@gmail.com',
-      displayName: 'John Doe',
-      photoUrl: null,
-      createdAt: new Date().toISOString(),
-    };
-    
-    this.saveUser();
-    window.appManager.modalManager.closeModal('authModal');
-    this.refreshUI();
-    Logger.info('User signed in', { email: this.user.email });
-    Analytics.trackEvent('user_signed_in');
+    if (!window.AuthService) {
+      alert('Authentication service is not configured. Please contact support.');
+      Logger.error('AuthService not available for Google sign in');
+      return;
+    }
+
+    AuthService.signInWithGoogle()
+      .then(() => {
+        window.appManager.modalManager.closeModal('authModal');
+      })
+      .catch((error) => {
+        console.error('Google sign-in failed', error);
+        alert('Google sign-in failed: ' + error.message);
+      });
   }
 
   /**
    * Sign up with Google
    */
   signUpWithGoogle() {
-    // Same as sign in for now - in production would differentiate
     this.signInWithGoogle();
   }
 
@@ -781,12 +871,28 @@ class UserManager {
   logout(event) {
     if (event) event.preventDefault();
     
-    this.user = null;
-    Storage.remove(CONFIG.user.storageKey);
-    this.refreshUI();
-    Logger.info('User logged out');
-    Analytics.trackEvent('user_logged_out');
-    alert('You have been signed out');
+    if (window.AuthService && AuthService.signOut) {
+      AuthService.signOut()
+        .then(() => {
+          this.user = null;
+          Storage.remove(CONFIG.user.storageKey);
+          Logger.info('User logged out');
+          Analytics.trackEvent('user_logged_out');
+          alert('You have been signed out');
+        })
+        .catch((error) => {
+          console.error('Error signing out', error);
+          alert('Error signing out: ' + error.message);
+        });
+    } else {
+      // Fallback logout if AuthService is unavailable
+      this.user = null;
+      Storage.remove(CONFIG.user.storageKey);
+      Logger.info('User logged out (legacy mode)');
+      Analytics.trackEvent('user_logged_out');
+      alert('You have been signed out');
+      this.refreshUI();
+    }
   }
 
   /**
@@ -870,8 +976,8 @@ class UserManager {
    * Show address management page
    */
   showAddressPage() {
-    const addresses = this.getAddresses();
-    const addressModal = `
+    const render = (addresses) => {
+      const addressModal = `
       <div id="addressModal" class="modal">
         <div class="modal-content">
           <div class="modal-header">
@@ -884,26 +990,65 @@ class UserManager {
         </div>
       </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', addressModal);
-    window.appManager.modalManager.openModal('addressModal');
+      document.body.insertAdjacentHTML('beforeend', addressModal);
+      window.appManager.modalManager.openModal('addressModal');
+    };
+
+    // If Firestore is available, prefer live data
+    if (window.DbService && this.user?.uid) {
+      DbService.getAddresses(this.user.uid)
+        .then((addresses) => {
+          this.user.addresses = addresses;
+          this.saveUser();
+          render(addresses);
+        })
+        .catch((error) => {
+          console.error('Failed to load addresses from Firestore', error);
+          render(this.getAddresses());
+        });
+    } else {
+      render(this.getAddresses());
+    }
   }
 
   /**
    * Add new address
    */
   addAddress(addressData) {
-    if (!this.user.addresses) {
-      this.user.addresses = [];
+    if (!this.user || !this.user.uid) {
+      alert('You must be signed in to manage addresses.');
+      return null;
     }
-    const newAddress = {
+
+    const localAdd = (addr) => {
+      if (!this.user.addresses) this.user.addresses = [];
+      this.user.addresses.push(addr);
+      this.saveUser();
+      Logger.info('Address added', { id: addr.id });
+      return addr;
+    };
+
+    // Persist to Firestore when available
+    if (window.DbService) {
+      return DbService.addAddress(this.user.uid, addressData)
+        .then((addr) => localAdd(addr))
+        .catch((error) => {
+          console.error('Failed to add address to Firestore', error);
+          const fallback = {
+            id: 'addr_' + Math.random().toString(36).substr(2, 9),
+            ...addressData,
+            createdAt: new Date().toISOString(),
+          };
+          return localAdd(fallback);
+        });
+    }
+
+    const fallback = {
       id: 'addr_' + Math.random().toString(36).substr(2, 9),
       ...addressData,
       createdAt: new Date().toISOString(),
     };
-    this.user.addresses.push(newAddress);
-    this.saveUser();
-    Logger.info('Address added', { id: newAddress.id });
-    return newAddress;
+    return localAdd(fallback);
   }
 
   /**
@@ -927,9 +1072,23 @@ class UserManager {
   deleteAddress(addressId) {
     if (!this.user.addresses) return false;
     this.user.addresses = this.user.addresses.filter(a => a.id !== addressId);
-    this.saveUser();
-    Logger.info('Address deleted', { id: addressId });
-    return true;
+
+    const finish = () => {
+      this.saveUser();
+      Logger.info('Address deleted', { id: addressId });
+      return true;
+    };
+
+    if (window.DbService && this.user?.uid) {
+      return DbService.deleteAddress(this.user.uid, addressId)
+        .then(finish)
+        .catch((error) => {
+          console.error('Failed to delete address from Firestore', error);
+          return finish();
+        });
+    }
+
+    return finish();
   }
 
   /**
@@ -943,19 +1102,41 @@ class UserManager {
    * Add order to history
    */
   addOrder(orderData) {
-    if (!this.user.orders) {
-      this.user.orders = [];
+    if (!this.user || !this.user.uid) {
+      alert('You must be signed in to place orders.');
+      return null;
     }
-    const newOrder = {
+
+    const localAdd = (ord) => {
+      if (!this.user.orders) this.user.orders = [];
+      this.user.orders.unshift(ord);
+      this.saveUser();
+      Logger.info('Order added', { id: ord.id });
+      return ord;
+    };
+
+    if (window.DbService) {
+      return DbService.addOrder(this.user.uid, orderData)
+        .then((ord) => localAdd(ord))
+        .catch((error) => {
+          console.error('Failed to add order to Firestore', error);
+          const fallback = {
+            id: 'ord_' + Math.random().toString(36).substr(2, 9),
+            ...orderData,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          };
+          return localAdd(fallback);
+        });
+    }
+
+    const fallback = {
       id: 'ord_' + Math.random().toString(36).substr(2, 9),
       ...orderData,
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
-    this.user.orders.push(newOrder);
-    this.saveUser();
-    Logger.info('Order added', { id: newOrder.id });
-    return newOrder;
+    return localAdd(fallback);
   }
 
   /**
@@ -966,62 +1147,79 @@ class UserManager {
   }
 
   /**
-   * Register new user
+   * Register new user (email/password via Firebase Auth)
    */
   register(email, password, displayName) {
     if (!email || !password || !displayName) {
-      Logger.error('Missing required fields');
+      Logger.error('Missing required fields for registration');
       return false;
     }
-    
-    this.user = {
-      id: 'user_' + Math.random().toString(36).substr(2, 9),
-      email,
-      displayName,
-      password: btoa(password), // Simple encoding (not production-safe)
-      photoUrl: null,
-      addresses: [],
-      orders: [],
-      createdAt: new Date().toISOString(),
-    };
-    
-    this.saveUser();
-    Logger.info('User registered', { email });
-    Analytics.trackEvent('user_registered');
-    return true;
+
+    if (!window.AuthService) {
+      alert('Authentication service is not configured. Please contact support.');
+      Logger.error('AuthService not available for email registration');
+      return false;
+    }
+
+    return AuthService.signUpWithEmail(displayName, email, password)
+      .then((result) => {
+        const firebaseUser = result.user;
+        this.user = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || displayName,
+          photoUrl: firebaseUser.photoURL,
+          addresses: [],
+          orders: [],
+          createdAt: firebaseUser.metadata?.creationTime || new Date().toISOString(),
+        };
+        this.saveUser();
+        Logger.info('User registered', { email });
+        Analytics.trackEvent('user_registered');
+        return true;
+      })
+      .catch((error) => {
+        console.error('Registration failed', error);
+        alert('Registration failed: ' + error.message);
+        return false;
+      });
   }
 
   /**
-   * Login with email and password
+   * Login with email and password (Firebase Auth)
    */
   login(email, password) {
-    // In production, this would call a backend API
-    // For now, we'll check if user exists and password matches
-    const savedUser = Storage.get(CONFIG.user.storageKey);
-    let user = null;
-
-    if (savedUser) {
-      if (typeof savedUser === 'string') {
-        // Backwards compatibility with older double‑JSON format
-        try {
-          user = JSON.parse(savedUser);
-        } catch (error) {
-          Logger.error('Failed to parse saved user for login', error);
-        }
-      } else {
-        user = savedUser;
-      }
+    if (!email || !password) {
+      Logger.error('Missing login credentials');
+      return false;
     }
 
-    if (user && user.email === email && user.password === btoa(password)) {
-      this.user = user;
-      Logger.info('User logged in', { email });
-      Analytics.trackEvent('user_logged_in');
-      return true;
+    if (!window.AuthService) {
+      alert('Authentication service is not configured. Please contact support.');
+      Logger.error('AuthService not available for email login');
+      return false;
     }
 
-    Logger.error('Invalid email or password');
-    return false;
+    return AuthService.signInWithEmail(email, password)
+      .then((result) => {
+        const firebaseUser = result.user;
+        this.user = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoUrl: firebaseUser.photoURL,
+          ...(this.user || {}),
+        };
+        this.saveUser();
+        Logger.info('User logged in', { email });
+        Analytics.trackEvent('user_logged_in');
+        return true;
+      })
+      .catch((error) => {
+        console.error('Login failed', error);
+        alert('Login failed: ' + error.message);
+        return false;
+      });
   }
 
   /**

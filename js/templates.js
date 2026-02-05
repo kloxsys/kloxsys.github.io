@@ -455,7 +455,24 @@ const Templates = {
         <label for="loginPassword">Password</label>
         <input type="password" id="loginPassword" placeholder="Enter your password">
       </div>
-      <button class="submit-button" onclick="if(window.appManager.userManager.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)) { window.appManager.userManager.saveUser(); window.appManager.modalManager.closeModal('authModal'); window.appManager.userManager.refreshUI(); } else { alert('Invalid email or password'); }">
+      <button class="submit-button" onclick="
+        const email = document.getElementById('loginEmail').value;
+        const pwd = document.getElementById('loginPassword').value;
+        if (!email || !pwd) {
+          alert('Please enter email and password');
+          return;
+        }
+        const mgr = window.appManager?.userManager;
+        if (!mgr) {
+          alert('Auth manager not ready. Please try again.');
+          return;
+        }
+        Promise.resolve(mgr.login(email, pwd)).then((ok) => {
+          if (ok) {
+            window.appManager.modalManager.closeModal('authModal');
+          }
+        });
+      ">
         Sign In
       </button>
 
@@ -503,12 +520,18 @@ const Templates = {
           return;
         }
         
-        if(window.appManager.userManager.register(email, pwd, name)) {
-          window.appManager.userManager.saveUser();
-          window.appManager.modalManager.closeModal('authModal');
-          window.appManager.userManager.refreshUI();
-          alert('Registration successful! Welcome ' + name);
+        const mgr = window.appManager?.userManager;
+        if (!mgr) {
+          alert('Auth manager not ready. Please try again.');
+          return;
         }
+
+        Promise.resolve(mgr.register(email, pwd, name)).then((ok) => {
+          if (ok) {
+            window.appManager.modalManager.closeModal('authModal');
+            alert('Registration successful! Welcome ' + name);
+          }
+        });
       ">
         Sign Up
       </button>

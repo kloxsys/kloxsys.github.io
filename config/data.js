@@ -727,6 +727,17 @@ const CONFIG = {
     storageKey: 'klox_user',
     sessionStorageKey: 'klox_session',
   },
+
+  // Firebase Configuration (project credentials)
+  firebase: {
+    apiKey: 'AIzaSyBVJt-p7R056YzvRnM0x4LDX6w0VQIbNRE',
+    authDomain: 'kloxsys-dev.firebaseapp.com',
+    projectId: 'kloxsys-dev',
+    storageBucket: 'kloxsys-dev.firebasestorage.app',
+    messagingSenderId: '836789543768',
+    appId: '1:836789543768:web:135ab604f11845857e7b2d',
+    measurementId: 'G-BFWSMYJZM3',
+  },
 };
 
 // Export for use in other modules
