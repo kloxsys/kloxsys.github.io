@@ -636,6 +636,12 @@ class UserManager {
     } else if (signInBtn) {
       // Button already exists, just make sure it's visible
       signInBtn.style.display = 'flex';
+      // Add click event listener as backup for onclick attribute
+      signInBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.openAuth();
+      });
     }
   }
 
@@ -643,24 +649,69 @@ class UserManager {
    * Open auth modal
    */
   openAuth() {
-    const modal = DOM.select('#authModal');
-    if (!modal) {
-      const authModal = `
+    try {
+      console.log('openAuth called');
+      
+      // Check if Templates is available
+      if (!Templates) {
+        console.error('Templates object not found');
+        alert('Error: Templates not loaded. Please refresh the page.');
+        return;
+      }
+      
+      if (!Templates.authModal) {
+        console.error('Templates.authModal not found');
+        alert('Error: Auth template not available. Please refresh the page.');
+        return;
+      }
+      
+      const existingModal = DOM.select('#authModal');
+      if (!existingModal) {
+        console.log('Creating new auth modal...');
+        
+        // Generate auth modal content
+        let authModalContent;
+        try {
+          authModalContent = Templates.authModal();
+          console.log('✓ Auth modal content generated');
+        } catch (error) {
+          console.error('Error generating auth modal content:', error);
+          alert('Error: Could not generate sign-in form. Please try refreshing.');
+          return;
+        }
+        
+        const authModal = `
         <div id="authModal" class="modal">
           <div class="modal-content auth-modal-content">
             <div class="modal-header">
               <h2>Sign In / Sign Up</h2>
-              <button class="close-modal" onclick="closeModal('authModal')">&times;</button>
+              <button class="close-modal" onclick="window.appManager.modalManager.closeModal('authModal')">&times;</button>
             </div>
             <div class="modal-body">
-              ${Templates.authModal()}
+              ${authModalContent}
             </div>
           </div>
         </div>
       `;
-      document.body.insertAdjacentHTML('beforeend', authModal);
+        document.body.insertAdjacentHTML('beforeend', authModal);
+        console.log('✓ Auth modal inserted into DOM');
+      } else {
+        console.log('Auth modal already exists, reusing it');
+      }
+      
+      // Ensure modalManager is available
+      if (window.appManager && window.appManager.modalManager) {
+        window.appManager.modalManager.openModal('authModal');
+        console.log('✓ Auth modal opened successfully');
+      } else {
+        console.error('modalManager not found');
+        alert('Error: Modal manager not initialized. Please refresh the page.');
+      }
+    } catch (error) {
+      console.error('❌ Error in openAuth:', error);
+      console.error('Stack trace:', error.stack);
+      alert('Error opening sign in dialog: ' + error.message);
     }
-    window.appManager.modalManager.openModal('authModal');
   }
 
   /**
@@ -1013,20 +1064,41 @@ class TabManager {
 
 class AppManager {
   constructor() {
-    this.modalManager = new ModalManager();
-    this.preOrderManager = new PreOrderManager();
-    this.supportManager = new SupportManager();
-    this.paymentManager = new PaymentManager();
-    this.navigationManager = new NavigationManager();
-    this.tabManager = new TabManager();
-    this.cartManager = new CartManager();
-    this.userManager = new UserManager();
+    try {
+      console.log('AppManager constructor starting...');
+      this.modalManager = new ModalManager();
+      console.log('✓ ModalManager created');
+      
+      this.preOrderManager = new PreOrderManager();
+      console.log('✓ PreOrderManager created');
+      
+      this.supportManager = new SupportManager();
+      console.log('✓ SupportManager created');
+      
+      this.paymentManager = new PaymentManager();
+      console.log('✓ PaymentManager created');
+      
+      this.tabManager = new TabManager();
+      console.log('✓ TabManager created');
+      
+      this.cartManager = new CartManager();
+      console.log('✓ CartManager created');
+      
+      this.userManager = new UserManager();
+      console.log('✓ UserManager created');
 
-    // Set up manager references
-    this.preOrderManager.setModalManager(this.modalManager);
-    this.supportManager.setModalManager(this.modalManager);
+      // Set up manager references
+      this.preOrderManager.setModalManager(this.modalManager);
+      this.supportManager.setModalManager(this.modalManager);
+      console.log('✓ Manager references set');
 
-    this.init();
+      this.init();
+      console.log('✓ AppManager fully initialized');
+    } catch (error) {
+      console.error('❌ CRITICAL: Error in AppManager constructor:', error);
+      console.error('Stack trace:', error.stack);
+      throw error;
+    }
   }
 
   /**
@@ -1082,27 +1154,104 @@ window.toggleFAQ = function(index) {
   }
 };
 
+/**
+ * Global function to handle sign in button click
+ * Used as fallback if onclick attribute fails
+ */
+window.handleSignInClick = function() {
+  const btn = document.getElementById('signInBtn');
+  
+  try {
+    console.log('handleSignInClick called');
+    console.log('window.appManager exists:', !!window.appManager);
+    console.log('window.appManagerReady:', window.appManagerReady);
+    
+    // Check if AppManager exists
+    if (!window.appManager) {
+      console.warn('AppManager not initialized');
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'wait';
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '⏳ Initializing...';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.innerHTML = originalHTML;
+        }, 3000);
+      }
+      console.log('Retrying in 3 seconds...');
+      return;
+    }
+    
+    if (!window.appManager.userManager) {
+      console.error('UserManager not available');
+      alert('Error: User manager not initialized. Please refresh the page.');
+      return;
+    }
+    
+    console.log('Calling openAuth...');
+    // AppManager is ready, open auth
+    window.appManager.userManager.openAuth();
+    
+  } catch (error) {
+    console.error('❌ Error in handleSignInClick:', error);
+    console.error('Stack trace:', error.stack);
+    alert('Error: ' + error.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }
+  }
+};
+
 // ============================================
 // APP STARTUP
 // ============================================
 
-// Wait for DOM to be ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded fired, creating AppManager');
-    window.appManager = new AppManager();
-    console.log('AppManager created, calling setupAuthUI in 100ms');
-    setTimeout(() => {
-      console.log('Calling setupAuthUI now');
-      window.appManager.userManager.setupAuthUI();
-    }, 100);
-  });
-} else {
-  console.log('DOM already loaded, creating AppManager');
+console.log('=== APP STARTUP SEQUENCE ===');
+console.log('Step 1: Checking if DOM is already loaded...');
+
+// Create AppManager immediately when script loads
+try {
+  console.log('Step 2: Creating AppManager...');
   window.appManager = new AppManager();
-  console.log('AppManager created, calling setupAuthUI in 100ms');
+  console.log('✓ AppManager created and available globally');
+  window.appManagerReady = true;
+} catch (error) {
+  console.error('❌ CRITICAL: Failed to create AppManager:', error);
+  window.appManagerReady = false;
+  // Try to show error to user
   setTimeout(() => {
-    console.log('Calling setupAuthUI now');
-    window.appManager.userManager.setupAuthUI();
-  }, 100);
+    alert('Critical error: Application failed to initialize. Please refresh the page.');
+  }, 1000);
+}
+
+// Setup UI when DOM is ready
+function setupAppUI() {
+  try {
+    console.log('Step 3: Setting up UI...');
+    if (window.appManager && window.appManager.userManager) {
+      window.appManager.userManager.setupAuthUI();
+      console.log('✓ setupAuthUI completed');
+    } else {
+      console.error('AppManager or UserManager not available for UI setup');
+    }
+  } catch (error) {
+    console.error('Error in setupAppUI:', error);
+  }
+}
+
+// Wait for DOM to be ready
+console.log('Step 2b: Checking document.readyState:', document.readyState);
+if (document.readyState === 'loading') {
+  console.log('DOM still loading, attaching DOMContentLoaded listener');
+  document.addEventListener('DOMContentLoaded', setupAppUI);
+} else {
+  // DOM is already loaded
+  console.log('DOM already loaded, running setupAppUI immediately');
+  setupAppUI();
 }
