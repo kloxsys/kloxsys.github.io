@@ -824,6 +824,340 @@ const Templates = {
       </div>
     </div>
   `,
+
+  /**
+   * Dashboard Main Template
+   */
+  dashboard: (user) => `
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <div class="user-greeting">
+          <h2>Welcome, ${user.displayName?.split(' ')[0] || 'User'}! 👋</h2>
+          <p>Here's your personal dashboard</p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Quick Stats -->
+        <div class="dashboard-card stats">
+          <h3>📊 Your Activity</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-value" id="totalOrders">0</span>
+              <span class="stat-label">Total Orders</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="totalSpent">$0</span>
+              <span class="stat-label">Total Spent</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="pendingOrders">0</span>
+              <span class="stat-label">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="dashboard-card recent-orders">
+          <div class="card-header">
+            <h3>📦 Recent Orders</h3>
+            <a href="#" onclick="window.appManager.userManager.openOrders(); return false;" class="view-all">View All →</a>
+          </div>
+          <div id="recentOrdersList">
+            <p class="empty-message">No orders yet</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="dashboard-card quick-actions">
+          <h3>⚡ Quick Actions</h3>
+          <div class="action-buttons">
+            <button class="action-btn" onclick="location.href='#products'">
+              🛍️ Continue Shopping
+            </button>
+            <button class="action-btn" onclick="window.appManager.userManager.openProfile(event)">
+              👤 Edit Profile
+            </button>
+            <button class="action-btn" onclick="window.appManager.userManager.openSettings(event)">
+              🏠 Manage Addresses
+            </button>
+            <button class="action-btn secondary" onclick="window.appManager.userManager.logout()">
+              🚪 Sign Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Wishlist / Favorites -->
+        <div class="dashboard-card favorites">
+          <h3>❤️ Saved Items</h3>
+          <div id="favoritesList">
+            <p class="empty-message">No saved items yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  /**
+   * Order Item Template
+   */
+  orderItem: (order) => `
+    <div class="order-item">
+      <div class="order-header">
+        <div class="order-id">
+          <strong>${order.id}</strong>
+          <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
+        </div>
+        <div class="order-status status-${order.status}">
+          ${order.status.toUpperCase()}
+        </div>
+      </div>
+      <div class="order-body">
+        <div class="order-items">
+          <strong>${order.items.length} item${order.items.length !== 1 ? 's' : ''}</strong>
+        </div>
+        <div class="order-total">
+          <strong>${Format.currency(order.total)}</strong>
+        </div>
+        ${order.trackingNumber ? `
+          <div class="order-tracking">
+            🚚 Tracking: ${order.trackingNumber}
+          </div>
+        ` : ''}
+        <div class="order-delivery">
+          📅 Estimated: ${order.estimatedDelivery}
+        </div>
+      </div>
+      <div class="order-actions">
+        <button class="action-link" onclick="window.appManager.userManager.viewOrderDetails('${order.id}')">
+          View Details →
+        </button>
+      </div>
+    </div>
+  `,
+
+  /**
+   * Order Details Modal
+   */
+  orderDetails: (order) => `
+    <div class="order-details">
+      <div class="order-info">
+        <h3>Order ${order.id}</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Status</label>
+            <span class="status-badge status-${order.status}">${order.status.toUpperCase()}</span>
+          </div>
+          <div class="info-item">
+            <label>Order Date</label>
+            <span>${new Date(order.createdAt).toLocaleString()}</span>
+          </div>
+          <div class="info-item">
+            <label>Estimated Delivery</label>
+            <span>${order.estimatedDelivery}</span>
+          </div>
+          ${order.trackingNumber ? `
+            <div class="info-item">
+              <label>Tracking Number</label>
+              <span>${order.trackingNumber}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="order-items-detail">
+        <h3>Items Ordered</h3>
+        <div class="items-list">
+          ${order.items.map(item => `
+            <div class="item-row">
+              <div class="item-name">${item.name}</div>
+              <div class="item-qty">Qty: ${item.quantity}</div>
+              <div class="item-price">${Format.currency(item.price * item.quantity)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="order-totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <strong>${Format.currency(order.subtotal)}</strong>
+        </div>
+        <div class="total-row">
+          <span>Shipping</span>
+          <strong>${Format.currency(order.shipping)}</strong>
+        </div>
+        <div class="total-row">
+          <span>Tax</span>
+          <strong>${Format.currency(order.tax)}</strong>
+        </div>
+        <div class="total-row final">
+          <span>Total</span>
+          <strong>${Format.currency(order.total)}</strong>
+        </div>
+      </div>
+
+      <div class="order-address">
+        <h3>Shipping Address</h3>
+        <p>${order.shippingAddress.name}</p>
+        <p>${order.shippingAddress.line1}${order.shippingAddress.line2 ? ', ' + order.shippingAddress.line2 : ''}</p>
+        <p>${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip}</p>
+        <p>${order.shippingAddress.country}</p>
+      </div>
+
+      ${['pending', 'processing'].includes(order.status) ? `
+        <div class="order-actions">
+          <button class="btn-danger" onclick="window.appManager.userManager.cancelOrder('${order.id}')">
+            ❌ Cancel Order
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `,
+
+  /**
+   * Checkout Template
+   */
+  checkout: (cartItems, totals) => `
+    <div class="checkout-container">
+      <h2>Checkout</h2>
+      
+      <div class="checkout-grid">
+        <!-- Left: Order Review -->
+        <div class="checkout-left">
+          <div class="checkout-section">
+            <h3>📦 Order Review</h3>
+            <div class="checkout-items">
+              ${cartItems.map(item => `
+                <div class="checkout-item">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-meta">Qty: ${item.quantity}</div>
+                  <div class="item-price">${Format.currency(item.price * item.quantity)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Shipping Address -->
+          <div class="checkout-section">
+            <h3>🏠 Shipping Address</h3>
+            <div id="shippingAddressForm">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="shipName" placeholder="Your full name" required>
+              </div>
+              <div class="form-group">
+                <label>Address Line 1</label>
+                <input type="text" id="shipLine1" placeholder="Street address" required>
+              </div>
+              <div class="form-group">
+                <label>Address Line 2</label>
+                <input type="text" id="shipLine2" placeholder="Apt, suite, etc. (optional)">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>City</label>
+                  <input type="text" id="shipCity" placeholder="City" required>
+                </div>
+                <div class="form-group">
+                  <label>State/Province</label>
+                  <input type="text" id="shipState" placeholder="State" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ZIP/Postal Code</label>
+                  <input type="text" id="shipZip" placeholder="ZIP code" required>
+                </div>
+                <div class="form-group">
+                  <label>Country</label>
+                  <input type="text" id="shipCountry" placeholder="Country" required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="checkout-section">
+            <h3>💳 Payment Method</h3>
+            <div class="payment-methods">
+              <label class="payment-option selected">
+                <input type="radio" name="payment" value="card" checked onchange="document.getElementById('cardForm').style.display='block'; document.getElementById('upiForm').style.display='none';">
+                <span>💳 Credit/Debit Card</span>
+              </label>
+              <div id="cardForm" class="payment-form">
+                <div class="form-group">
+                  <label>Card Number</label>
+                  <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Expiry</label>
+                    <input type="text" placeholder="MM/YY" maxlength="5">
+                  </div>
+                  <div class="form-group">
+                    <label>CVV</label>
+                    <input type="text" placeholder="123" maxlength="3">
+                  </div>
+                </div>
+              </div>
+
+              <label class="payment-option">
+                <input type="radio" name="payment" value="upi" onchange="document.getElementById('cardForm').style.display='none'; document.getElementById('upiForm').style.display='block';">
+                <span>📱 UPI</span>
+              </label>
+              <div id="upiForm" class="payment-form" style="display:none;">
+                <div class="form-group">
+                  <label>UPI ID</label>
+                  <input type="text" placeholder="yourname@upi">
+                </div>
+              </div>
+
+              <label class="payment-option">
+                <input type="radio" name="payment" value="paypal">
+                <span>🅿️ PayPal</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Order Summary -->
+        <div class="checkout-right">
+          <div class="order-summary sticky">
+            <h3>Order Summary</h3>
+            
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>${Format.currency(totals.subtotal)}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <strong>${Format.currency(totals.shipping)}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Tax</span>
+              <strong>${Format.currency(totals.tax)}</strong>
+            </div>
+            
+            <div class="summary-divider"></div>
+            
+            <div class="summary-row total">
+              <span>Total Amount</span>
+              <strong>${Format.currency(totals.total)}</strong>
+            </div>
+
+            <button class="submit-button" style="width: 100%; margin-top: 20px;" onclick="window.appManager.cartManager.processCheckout()">
+              ✓ Place Order
+            </button>
+
+            <button class="secondary-button" style="width: 100%; margin-top: 10px;" onclick="window.appManager.modalManager.closeModal('checkoutModal')">
+              ← Continue Shopping
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
 };
 
 // Export for use in modules

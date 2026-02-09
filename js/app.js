@@ -552,9 +552,155 @@ class CartManager {
    * Show checkout flow
    */
   showCheckoutFlow() {
-    // This would integrate with payment gateway
-    alert('Checkout flow would process here. Items: ' + this.items.length);
-    Logger.info('Checkout initiated', { items: this.items.length });
+    try {
+      // Validate cart
+      const validation = CartServiceBackend.validateCart(this.items);
+      if (!validation.valid) {
+        alert('Cart validation failed: ' + validation.error);
+        return;
+      }
+
+      // Calculate totals
+      const subtotal = this.getTotal();
+      const shippingAddress = {
+        country: 'US', // Default, will be updated in checkout form
+        state: 'NY',
+      };
+      const shipping = CartServiceBackend.calculateShipping(shippingAddress, this.items);
+      const tax = CartServiceBackend.calculateTax(subtotal, shippingAddress);
+      const total = subtotal + shipping + tax;
+
+      const totals = {
+        subtotal,
+        shipping,
+        tax,
+        total,
+      };
+
+      // Show checkout modal
+      const modal = document.createElement('div');
+      modal.id = 'checkoutModal';
+      modal.className = 'modal show';
+      modal.innerHTML = `
+        <div class="modal-content checkout-modal">
+          <div class="modal-header">
+            <h2>Checkout</h2>
+            <button class="close-modal" onclick="window.appManager.modalManager.closeModal('checkoutModal')">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${Templates.checkout(this.items, totals)}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      window.appManager.modalManager.openModal('checkoutModal');
+
+      // Store checkout data
+      window.checkoutData = {
+        items: this.items,
+        subtotal,
+        shipping,
+        tax,
+        total,
+      };
+
+      Logger.info('Checkout flow started', { items: this.items.length, total });
+    } catch (error) {
+      Logger.error('Error showing checkout flow', error);
+      alert('Error processing checkout: ' + error.message);
+    }
+  }
+
+  /**
+   * Process checkout (place order)
+   */
+  processCheckout() {
+    try {
+      const user = window.appManager.userManager.user;
+      
+      // Get form data
+      const shipName = document.getElementById('shipName').value;
+      const shipLine1 = document.getElementById('shipLine1').value;
+      const shipLine2 = document.getElementById('shipLine2').value;
+      const shipCity = document.getElementById('shipCity').value;
+      const shipState = document.getElementById('shipState').value;
+      const shipZip = document.getElementById('shipZip').value;
+      const shipCountry = document.getElementById('shipCountry').value;
+      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+      // Validate form
+      if (!shipName || !shipLine1 || !shipCity || !shipState || !shipZip) {
+        alert('Please fill in all required address fields');
+        return;
+      }
+
+      const shippingAddress = {
+        name: shipName,
+        line1: shipLine1,
+        line2: shipLine2,
+        city: shipCity,
+        state: shipState,
+        zip: shipZip,
+        country: shipCountry,
+      };
+
+      // Re-calculate with actual country
+      const checkout = window.checkoutData;
+      const shipping = CartServiceBackend.calculateShipping(shippingAddress, checkout.items);
+      const tax = CartServiceBackend.calculateTax(checkout.subtotal, shippingAddress);
+      const total = checkout.subtotal + shipping + tax;
+
+      // Reserve inventory
+      InventoryService.reserveInventory('temp-' + Date.now(), checkout.items);
+
+      // Create order
+      const order = OrderService.createOrder(user.id, {
+        items: checkout.items,
+        subtotal: checkout.subtotal,
+        tax,
+        shipping,
+        total,
+        shippingAddress,
+        billingAddress: shippingAddress,
+        paymentMethod,
+      });
+
+      // Process payment
+      const payment = PaymentService.processPayment({
+        orderId: order.id,
+        amount: total,
+        method: paymentMethod,
+      });
+
+      // Update order status
+      OrderService.updateOrderStatus(order.id, 'processing');
+
+      // Send confirmation
+      NotificationService.sendOrderConfirmation(order, user.email);
+
+      // Clear cart
+      this.items = [];
+      this.saveCart();
+
+      // Close checkout and show success
+      window.appManager.modalManager.closeModal('checkoutModal');
+      
+      alert(`✓ Order placed successfully!\n\nOrder ID: ${order.id}\nTotal: ${Format.currency(total)}\n\nYou will receive a confirmation email shortly.`);
+
+      Logger.info('Checkout completed', { orderId: order.id, amount: total });
+      Analytics.trackEvent('order_completed', { orderId: order.id, amount: total });
+
+      // Redirect to dashboard
+      if (window.appManager.dashboardManager) {
+        setTimeout(() => {
+          window.appManager.dashboardManager.openDashboard(user);
+        }, 1000);
+      }
+
+    } catch (error) {
+      Logger.error('Error processing checkout', error);
+      alert('Error placing order: ' + error.message);
+    }
   }
 
   /**
@@ -567,6 +713,82 @@ class CartManager {
     document.body.appendChild(notification);
     
     setTimeout(() => notification.remove(), 3000);
+  }
+}
+
+// ============================================
+// DASHBOARD MANAGEMENT
+// ============================================
+
+class DashboardManager {
+  constructor() {
+    this.currentUser = null;
+  }
+
+  /**
+   * Open user dashboard
+   */
+  openDashboard(user) {
+    try {
+      this.currentUser = user;
+      const modal = DOM.select('#dashboardModal');
+      
+      if (!modal) {
+        const dashboardModal = `
+          <div id="dashboardModal" class="modal">
+            <div class="modal-content dashboard-modal">
+              <div class="modal-header">
+                <h2>Dashboard</h2>
+                <button class="close-modal" onclick="window.appManager.modalManager.closeModal('dashboardModal')">&times;</button>
+              </div>
+              <div class="modal-body">
+                ${Templates.dashboard(user)}
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', dashboardModal);
+      }
+
+      window.appManager.modalManager.openModal('dashboardModal');
+      this.updateDashboard(user);
+    } catch (error) {
+      Logger.error('Error opening dashboard', error);
+      alert('Error opening dashboard');
+    }
+  }
+
+  /**
+   * Update dashboard data
+   */
+  updateDashboard(user) {
+    try {
+      const orders = OrderService.getUserOrders(user.id);
+      const recentOrders = orders.slice(-3).reverse();
+      
+      // Calculate stats
+      const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
+      const pendingOrders = orders.filter(order => ['pending', 'processing'].includes(order.status)).length;
+
+      // Update stats
+      document.getElementById('totalOrders').textContent = orders.length;
+      document.getElementById('totalSpent').textContent = Format.currency(totalSpent);
+      document.getElementById('pendingOrders').textContent = pendingOrders;
+
+      // Update recent orders
+      const recentOrdersList = document.getElementById('recentOrdersList');
+      if (recentOrdersList) {
+        if (recentOrders.length > 0) {
+          recentOrdersList.innerHTML = recentOrders.map(order => Templates.orderItem(order)).join('');
+        } else {
+          recentOrdersList.innerHTML = '<p class="empty-message">No orders yet. Start shopping!</p>';
+        }
+      }
+
+      Logger.info('Dashboard updated', { orders: orders.length });
+    } catch (error) {
+      Logger.error('Error updating dashboard', error);
+    }
   }
 }
 
@@ -749,6 +971,7 @@ class UserManager {
           </div>
           <div id="userMenuDropdown" class="user-menu-dropdown" style="display: none;">
             <a href="#" onclick="window.appManager.userManager.openProfile(event)">Profile</a>
+            <a href="#" onclick="window.appManager.dashboardManager.openDashboard(window.appManager.userManager.user)">Dashboard</a>
             <a href="#" onclick="window.appManager.userManager.openSettings(event)">Addresses</a>
             <a href="#" onclick="window.appManager.userManager.openOrders(event)">Orders</a>
             <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border);">
@@ -1244,6 +1467,58 @@ class UserManager {
   }
 
   /**
+   * View order details
+   */
+  viewOrderDetails(orderId) {
+    try {
+      const order = OrderService.getOrder(orderId);
+      if (!order) {
+        alert('Order not found');
+        return;
+      }
+
+      const modal = document.createElement('div');
+      modal.id = 'orderDetailsModal';
+      modal.className = 'modal show';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Order Details</h2>
+            <button class="close-modal" onclick="document.getElementById('orderDetailsModal').remove()">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${Templates.orderDetails(order)}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      Logger.info('Order details viewed', { orderId });
+    } catch (error) {
+      Logger.error('Error viewing order details', error);
+      alert('Error viewing order details');
+    }
+  }
+
+  /**
+   * Cancel order
+   */
+  cancelOrder(orderId) {
+    try {
+      if (confirm('Are you sure you want to cancel this order?')) {
+        const order = OrderService.cancelOrder(orderId);
+        if (order) {
+          alert('Order cancelled successfully');
+          this.showOrdersPage();
+        }
+      }
+    } catch (error) {
+      Logger.error('Error cancelling order', error);
+      alert('Error cancelling order');
+    }
+  }
+
+  /**
    * Refresh entire UI
    */
   refreshUI() {
@@ -1329,6 +1604,9 @@ class AppManager {
       
       this.userManager = new UserManager();
       console.log('✓ UserManager created');
+
+      this.dashboardManager = new DashboardManager();
+      console.log('✓ DashboardManager created');
 
       // Set up manager references
       this.preOrderManager.setModalManager(this.modalManager);
