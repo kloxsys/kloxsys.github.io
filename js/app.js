@@ -577,6 +577,12 @@ class CartManager {
         total,
       };
 
+      // Remove any existing checkout modal
+      const existingModal = document.getElementById('checkoutModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
       // Show checkout modal
       const modal = document.createElement('div');
       modal.id = 'checkoutModal';
@@ -604,6 +610,7 @@ class CartManager {
         total,
       };
 
+      console.log('✓ Checkout modal created with Razorpay pre-selected');
       Logger.info('Checkout flow started', { items: this.items.length, total });
     } catch (error) {
       Logger.error('Error showing checkout flow', error);
@@ -626,11 +633,25 @@ class CartManager {
       const shipState = document.getElementById('shipState').value;
       const shipZip = document.getElementById('shipZip').value;
       const shipCountry = document.getElementById('shipCountry').value;
-      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+      
+      // Get payment method with proper validation
+      const paymentRadio = document.querySelector('input[name="payment"]:checked');
+      if (!paymentRadio) {
+        alert('Please select a payment method');
+        return;
+      }
+      const paymentMethod = paymentRadio.value;
+      console.log('Selected payment method:', paymentMethod);
 
       // Validate form
       if (!shipName || !shipLine1 || !shipCity || !shipState || !shipZip) {
         alert('Please fill in all required address fields');
+        return;
+      }
+
+      // Validate payment method
+      if (!paymentMethod || (paymentMethod !== 'razorpay' && paymentMethod !== 'upi-manual')) {
+        alert('Please select a valid payment method (Razorpay or Google Pay Send)');
         return;
       }
 
@@ -665,13 +686,96 @@ class CartManager {
         paymentMethod,
       });
 
-      // Process payment
-      const payment = PaymentService.processPayment({
+      // Handle different payment methods
+      if (paymentMethod === 'razorpay') {
+        this.handleRazorpayPayment(order, user, total, shippingAddress);
+      } else if (paymentMethod === 'upi-manual') {
+        this.handleGooglePaySend(order, user, total, shippingAddress);
+      }
+
+    } catch (error) {
+      Logger.error('Error processing checkout', error);
+      alert('Error placing order: ' + error.message);
+    }
+  }
+
+  /**
+   * Handle Razorpay payment
+   */
+  handleRazorpayPayment(order, user, total, shippingAddress) {
+    try {
+      console.log('Initiating Razorpay payment for order:', order.id);
+      
+      RazorpayPayment.initPayment({
         orderId: order.id,
         amount: total,
-        method: paymentMethod,
+        customerName: shippingAddress.name,
+        customerEmail: user.email,
+        customerPhone: user.phone || '9999999999',
+        onSuccess: (response) => {
+          console.log('Payment successful:', response);
+          this.completeOrder(order, user, total, 'razorpay', response);
+        },
+        onError: (error) => {
+          console.error('Payment failed:', error);
+          alert('Payment failed. Please try again.');
+          OrderService.updateOrderStatus(order.id, 'failed');
+        }
       });
 
+    } catch (error) {
+      Logger.error('Razorpay payment error', error);
+      alert('Error initiating payment: ' + error.message);
+    }
+  }
+
+  /**
+   * Handle Google Pay Send (manual UPI)
+   */
+  async handleGooglePaySend(order, user, total, shippingAddress) {
+    try {
+      console.log('Initiating Google Pay Send UPI payment for order:', order.id);
+      
+      const upiRecipientId = document.getElementById('upiRecipientId').value || 'merchant@okaxis';
+      
+      const upiModalHTML = `
+        <div id="upiPaymentModal" class="modal">
+          <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+              <h2>Complete UPI Payment</h2>
+              <button class="close-modal" onclick="window.appManager.modalManager.closeModal('upiPaymentModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+              ${await GooglePaySend.showPaymentModal({
+                upiId: upiRecipientId,
+                recipientName: 'Klox Systems',
+                amount: total,
+                orderId: order.id
+              })}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', upiModalHTML);
+      window.appManager.modalManager.openModal('upiPaymentModal');
+
+      // After user confirms, complete the order
+      setTimeout(() => {
+        this.completeOrder(order, user, total, 'google-pay-send', { orderId: order.id });
+      }, 2000);
+
+    } catch (error) {
+      Logger.error('Google Pay Send error', error);
+      alert('Error with UPI payment: ' + error.message);
+    }
+  }
+
+  /**
+   * Complete order after successful payment
+   */
+  completeOrder(order, user, total, paymentMethod, paymentData) {
+    try {
       // Update order status
       OrderService.updateOrderStatus(order.id, 'processing');
 
@@ -682,13 +786,16 @@ class CartManager {
       this.items = [];
       this.saveCart();
 
-      // Close checkout and show success
+      // Close checkout modal
       window.appManager.modalManager.closeModal('checkoutModal');
+      if (document.getElementById('upiPaymentModal')) {
+        window.appManager.modalManager.closeModal('upiPaymentModal');
+      }
       
       alert(`✓ Order placed successfully!\n\nOrder ID: ${order.id}\nTotal: ${Format.currency(total)}\n\nYou will receive a confirmation email shortly.`);
 
-      Logger.info('Checkout completed', { orderId: order.id, amount: total });
-      Analytics.trackEvent('order_completed', { orderId: order.id, amount: total });
+      Logger.info('Order completed', { orderId: order.id, amount: total, paymentMethod });
+      Analytics.trackEvent('order_completed', { orderId: order.id, amount: total, paymentMethod });
 
       // Redirect to dashboard
       if (window.appManager.dashboardManager) {
@@ -698,8 +805,8 @@ class CartManager {
       }
 
     } catch (error) {
-      Logger.error('Error processing checkout', error);
-      alert('Error placing order: ' + error.message);
+      Logger.error('Error completing order', error);
+      alert('Error finalizing order: ' + error.message);
     }
   }
 

@@ -1080,50 +1080,52 @@ const Templates = {
           <!-- Payment Method -->
           <div class="checkout-section">
             <h3>💳 Payment Method</h3>
-            <div class="payment-methods">
+            
+            <div style="margin-bottom: 1.5rem;">
+              <h4 style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.75rem;">Recommended - Instant & Secure:</h4>
+              
               <label class="payment-option selected">
-                <input type="radio" name="payment" value="card" checked onchange="document.getElementById('cardForm').style.display='block'; document.getElementById('upiForm').style.display='none';">
-                <span>💳 Credit/Debit Card</span>
+                <input type="radio" name="payment" value="razorpay" checked onchange="
+                  document.getElementById('razorpayInfo').style.display='block';
+                  document.getElementById('upiManualForm').style.display='none';
+                ">
+                <span>🔒 Razorpay (UPI, Card, Wallet)</span>
               </label>
-              <div id="cardForm" class="payment-form">
-                <div class="form-group">
-                  <label>Card Number</label>
-                  <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Expiry</label>
-                    <input type="text" placeholder="MM/YY" maxlength="5">
-                  </div>
-                  <div class="form-group">
-                    <label>CVV</label>
-                    <input type="text" placeholder="123" maxlength="3">
-                  </div>
-                </div>
+              <div id="razorpayInfo" class="payment-form" style="background: rgba(102, 126, 234, 0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-light); margin: 0;">
+                  ✓ Secure payment gateway<br>
+                  ✓ UPI, Debit/Credit Card, Wallets<br>
+                  ✓ Instant confirmation<br>
+                  ✓ Test mode (demo)
+                </p>
               </div>
+            </div>
 
+            <div style="margin-bottom: 1.5rem;">
+              <h4 style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.75rem;">Alternative:</h4>
+              
               <label class="payment-option">
-                <input type="radio" name="payment" value="upi" onchange="document.getElementById('cardForm').style.display='none'; document.getElementById('upiForm').style.display='block';">
-                <span>📱 UPI</span>
+                <input type="radio" name="payment" value="upi-manual" onchange="
+                  document.getElementById('razorpayInfo').style.display='none';
+                  document.getElementById('upiManualForm').style.display='block';
+                ">
+                <span>📱 Google Pay Send (Manual UPI)</span>
               </label>
-              <div id="upiForm" class="payment-form" style="display:none;">
-                <div class="form-group">
-                  <label>UPI ID</label>
-                  <input type="text" placeholder="yourname@upi">
-                </div>
+              <div id="upiManualForm" class="payment-form" style="display:none; background: rgba(255, 193, 7, 0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-light); margin: 0 0 0.5rem 0;">
+                  ℹ️ You'll see a QR code and UPI ID to send payment manually. Order will be confirmed after verification.
+                </p>
+                <input type="hidden" id="upiRecipientId" value="">
+                <p style="font-size: 0.75rem; color: var(--text-light);">Enter your UPI recipient ID (optional):</p>
+                <input type="text" id="upiRecipientId" placeholder="yourname@okhdfcbank" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.3rem; font-size: 0.85rem;">
               </div>
-
-              <label class="payment-option">
-                <input type="radio" name="payment" value="paypal">
-                <span>🅿️ PayPal</span>
-              </label>
             </div>
           </div>
         </div>
 
         <!-- Right: Order Summary -->
         <div class="checkout-right">
-          <div class="order-summary sticky">
+          <div class="checkout-summary">
             <h3>Order Summary</h3>
             
             <div class="summary-row">
