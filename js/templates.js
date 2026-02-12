@@ -1158,6 +1158,18 @@ const Templates = {
         </div>
       </div>
     </div>
+    
+    <script>
+      // Ensure payment method is properly initialized
+      setTimeout(() => {
+        const paymentRadios = document.querySelectorAll('input[name="payment"]');
+        if (paymentRadios.length > 0) {
+          // Make sure first option is checked by default
+          paymentRadios[0].checked = true;
+          console.log('Payment method initialized:', paymentRadios[0].value);
+        }
+      }, 100);
+    </script>
   `,
 };
 

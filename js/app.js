@@ -626,32 +626,44 @@ class CartManager {
       const user = window.appManager.userManager.user;
       
       // Get form data
-      const shipName = document.getElementById('shipName').value;
-      const shipLine1 = document.getElementById('shipLine1').value;
-      const shipLine2 = document.getElementById('shipLine2').value;
-      const shipCity = document.getElementById('shipCity').value;
-      const shipState = document.getElementById('shipState').value;
-      const shipZip = document.getElementById('shipZip').value;
-      const shipCountry = document.getElementById('shipCountry').value;
+      const shipName = document.getElementById('shipName')?.value || '';
+      const shipLine1 = document.getElementById('shipLine1')?.value || '';
+      const shipLine2 = document.getElementById('shipLine2')?.value || '';
+      const shipCity = document.getElementById('shipCity')?.value || '';
+      const shipState = document.getElementById('shipState')?.value || '';
+      const shipZip = document.getElementById('shipZip')?.value || '';
+      const shipCountry = document.getElementById('shipCountry')?.value || '';
+      
+      // Validate address form
+      if (!shipName || !shipLine1 || !shipCity || !shipState || !shipZip) {
+        alert('Please fill in all required address fields (Name, Address, City, State, ZIP)');
+        return;
+      }
       
       // Get payment method with proper validation
-      const paymentRadio = document.querySelector('input[name="payment"]:checked');
-      if (!paymentRadio) {
-        alert('Please select a payment method');
-        return;
+      const paymentRadios = document.querySelectorAll('input[name="payment"]');
+      console.log('Found payment radio buttons:', paymentRadios.length);
+      
+      let paymentMethod = null;
+      for (let radio of paymentRadios) {
+        console.log('Radio button:', { value: radio.value, checked: radio.checked });
+        if (radio.checked) {
+          paymentMethod = radio.value;
+          break;
+        }
       }
-      const paymentMethod = paymentRadio.value;
+      
       console.log('Selected payment method:', paymentMethod);
-
-      // Validate form
-      if (!shipName || !shipLine1 || !shipCity || !shipState || !shipZip) {
-        alert('Please fill in all required address fields');
-        return;
+      
+      // If no payment method found, try to use razorpay as default
+      if (!paymentMethod) {
+        console.warn('No payment method found, defaulting to razorpay');
+        paymentMethod = 'razorpay';
       }
-
+      
       // Validate payment method
-      if (!paymentMethod || (paymentMethod !== 'razorpay' && paymentMethod !== 'upi-manual')) {
-        alert('Please select a valid payment method (Razorpay or Google Pay Send)');
+      if (paymentMethod !== 'razorpay' && paymentMethod !== 'upi-manual') {
+        alert('Invalid payment method. Please select Razorpay or Google Pay Send.');
         return;
       }
 
@@ -698,6 +710,7 @@ class CartManager {
     } catch (error) {
       Logger.error('Error processing checkout', error);
       alert('Error placing order: ' + error.message);
+      console.error('Checkout error details:', error);
     }
   }
 
