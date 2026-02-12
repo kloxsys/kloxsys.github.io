@@ -176,10 +176,12 @@ const Storage = {
    */
   get: (key) => {
     try {
+      if (typeof localStorage === 'undefined') return null;
       const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
+      if (!item) return null;
+      return JSON.parse(item);
     } catch (error) {
-      console.error(`Error getting item from storage: ${key}`, error);
+      console.warn(`Error getting item from storage: ${key}`, error.message);
       return null;
     }
   },
@@ -189,9 +191,12 @@ const Storage = {
    */
   set: (key, value) => {
     try {
+      if (typeof localStorage === 'undefined') return false;
       localStorage.setItem(key, JSON.stringify(value));
+      return true;
     } catch (error) {
-      console.error(`Error setting item in storage: ${key}`, error);
+      console.warn(`Error setting item in storage: ${key}`, error.message);
+      return false;
     }
   },
 
@@ -200,9 +205,12 @@ const Storage = {
    */
   remove: (key) => {
     try {
+      if (typeof localStorage === 'undefined') return false;
       localStorage.removeItem(key);
+      return true;
     } catch (error) {
-      console.error(`Error removing item from storage: ${key}`, error);
+      console.warn(`Error removing item from storage: ${key}`, error.message);
+      return false;
     }
   },
 
@@ -211,9 +219,12 @@ const Storage = {
    */
   clear: () => {
     try {
+      if (typeof localStorage === 'undefined') return false;
       localStorage.clear();
+      return true;
     } catch (error) {
-      console.error('Error clearing storage', error);
+      console.warn('Error clearing storage', error.message);
+      return false;
     }
   },
 };

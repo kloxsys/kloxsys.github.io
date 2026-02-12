@@ -672,7 +672,9 @@ class CartManager {
       const total = checkout.subtotal + shipping + tax;
 
       // Reserve inventory
-      InventoryService.reserveInventory('temp-' + Date.now(), checkout.items);
+      if (InventoryService && InventoryService.reserveInventory) {
+        InventoryService.reserveInventory('temp-' + Date.now(), checkout.items);
+      }
 
       // Create order
       const order = OrderService.createOrder(user.id, {
@@ -704,22 +706,29 @@ class CartManager {
    */
   handleRazorpayPayment(order, user, total, shippingAddress) {
     try {
+      // Check if Razorpay script is loaded
+      if (typeof Razorpay === 'undefined') {
+        throw new Error('Razorpay payment gateway not loaded. Please refresh the page.');
+      }
+
       console.log('Initiating Razorpay payment for order:', order.id);
       
       RazorpayPayment.initPayment({
         orderId: order.id,
         amount: total,
-        customerName: shippingAddress.name,
-        customerEmail: user.email,
+        customerName: shippingAddress.name || 'Customer',
+        customerEmail: user.email || 'user@example.com',
         customerPhone: user.phone || '9999999999',
         onSuccess: (response) => {
-          console.log('Payment successful:', response);
+          console.log('✓ Payment successful:', response);
           this.completeOrder(order, user, total, 'razorpay', response);
         },
         onError: (error) => {
-          console.error('Payment failed:', error);
-          alert('Payment failed. Please try again.');
-          OrderService.updateOrderStatus(order.id, 'failed');
+          console.error('❌ Payment failed:', error);
+          alert('Payment failed. Please try again or use Google Pay Send.');
+          if (OrderService && OrderService.updateOrderStatus) {
+            OrderService.updateOrderStatus(order.id, 'failed');
+          }
         }
       });
 
@@ -732,11 +741,11 @@ class CartManager {
   /**
    * Handle Google Pay Send (manual UPI)
    */
-  async handleGooglePaySend(order, user, total, shippingAddress) {
+  handleGooglePaySend(order, user, total, shippingAddress) {
     try {
       console.log('Initiating Google Pay Send UPI payment for order:', order.id);
       
-      const upiRecipientId = document.getElementById('upiRecipientId').value || 'merchant@okaxis';
+      const upiRecipientId = document.getElementById('upiRecipientId')?.value || 'merchant@okaxis';
       
       const upiModalHTML = `
         <div id="upiPaymentModal" class="modal">
@@ -746,12 +755,36 @@ class CartManager {
               <button class="close-modal" onclick="window.appManager.modalManager.closeModal('upiPaymentModal')">&times;</button>
             </div>
             <div class="modal-body" style="padding: 2rem;">
-              ${await GooglePaySend.showPaymentModal({
-                upiId: upiRecipientId,
-                recipientName: 'Klox Systems',
-                amount: total,
-                orderId: order.id
-              })}
+              <div class="upi-payment-modal">
+                <div class="upi-payment-header">
+                  <h3>Complete Payment via UPI</h3>
+                  <p class="order-amount">₹${total.toFixed(2)}</p>
+                </div>
+                <div class="upi-payment-content">
+                  <div class="upi-manual-section">
+                    <p class="upi-instruction">Send ₹${total.toFixed(2)} to UPI ID:</p>
+                    <div class="upi-id-display">
+                      <input type="text" value="${upiRecipientId}" readonly class="upi-id-input">
+                      <button class="upi-copy-btn" onclick="navigator.clipboard.writeText('${upiRecipientId}');alert('UPI ID copied!')">Copy</button>
+                    </div>
+                    <p class="upi-note"><strong>Reference:</strong> ${order.id}</p>
+                  </div>
+                  <div class="upi-steps">
+                    <h4>Steps:</h4>
+                    <ol>
+                      <li>Open any UPI app (Google Pay, PhonePe, Paytm, etc.)</li>
+                      <li>Enter the UPI ID above</li>
+                      <li>Enter amount: ₹${total.toFixed(2)}</li>
+                      <li>Complete the payment</li>
+                      <li>Click "Confirm Payment" below</li>
+                    </ol>
+                  </div>
+                </div>
+                <div class="upi-payment-actions">
+                  <button class="upi-confirm-btn" onclick="alert('Payment confirmed. Order will be processed within 2-3 minutes');">✓ Confirm Payment Sent</button>
+                  <button class="upi-cancel-btn" onclick="window.appManager.modalManager.closeModal('upiPaymentModal')">Cancel</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -837,6 +870,11 @@ class DashboardManager {
    */
   openDashboard(user) {
     try {
+      if (!user) {
+        alert('Please sign in to view your dashboard');
+        return;
+      }
+
       this.currentUser = user;
       const modal = DOM.select('#dashboardModal');
       
