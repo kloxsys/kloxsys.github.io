@@ -1101,30 +1101,77 @@ class UserManager {
     }
     
     if (this.isLoggedIn()) {
-      // Show user menu widget in header - replace button with user info
+      // Show enhanced user menu widget in header
       const userMenuHTML = `
-        <div class="user-widget-content">
-          <div class="user-widget-header">
-            <div class="user-avatar-small">
-              ${this.user.photoUrl ? `<img src="${this.user.photoUrl}" alt="${this.user.displayName}">` : '👤'}
+        <div class="user-widget-wrapper">
+          <!-- User Profile Button -->
+          <button class="user-widget-button" onclick="window.appManager.userManager.toggleUserMenu()" title="User Menu">
+            <div class="user-avatar">
+              ${this.user.photoUrl ? `<img src="${this.user.photoUrl}" alt="${this.user.displayName}" class="avatar-img">` : '<span class="avatar-initials">👤</span>'}
             </div>
-            <div class="user-widget-info">
-              <p class="user-widget-name">${this.user.displayName?.split(' ')[0] || 'User'}</p>
-              <p class="user-widget-email">${this.user.email}</p>
+            <div class="user-info-compact">
+              <span class="user-name-compact">${this.user.displayName?.split(' ')[0] || 'User'}</span>
+              <span class="user-dropdown-arrow">▼</span>
             </div>
-            <button class="user-widget-menu-btn" onclick="window.appManager.userManager.toggleUserMenu()" title="Menu">⋮</button>
-          </div>
+          </button>
+          
+          <!-- Dropdown Menu -->
           <div id="userMenuDropdown" class="user-menu-dropdown" style="display: none;">
-            <a href="#" onclick="window.appManager.userManager.openProfile(event)">Profile</a>
-            <a href="#" onclick="window.appManager.dashboardManager.openDashboard(window.appManager.userManager.user)">Dashboard</a>
-            <a href="#" onclick="window.appManager.userManager.openSettings(event)">Addresses</a>
-            <a href="#" onclick="window.appManager.userManager.openOrders(event)">Orders</a>
-            <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border);">
-            <a href="#" onclick="window.appManager.userManager.logout()">Sign Out</a>
+            <!-- Profile Section -->
+            <div class="menu-section">
+              <div class="menu-header-profile">
+                <div class="menu-avatar">
+                  ${this.user.photoUrl ? `<img src="${this.user.photoUrl}" alt="${this.user.displayName}">` : '<span class="avatar-large">👤</span>'}
+                </div>
+                <div class="menu-user-info">
+                  <p class="menu-name">${this.user.displayName || 'User'}</p>
+                  <p class="menu-email">${this.user.email}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="menu-section">
+              <a href="#" class="menu-item" onclick="window.appManager.userManager.openProfile(event)">
+                <span class="menu-icon">👤</span>
+                <span class="menu-label">My Profile</span>
+              </a>
+              <a href="#" class="menu-item" onclick="window.appManager.dashboardManager.openDashboard(window.appManager.userManager.user)">
+                <span class="menu-icon">📊</span>
+                <span class="menu-label">Dashboard</span>
+              </a>
+              <a href="#" class="menu-item" onclick="window.appManager.userManager.openOrders(event)">
+                <span class="menu-icon">📦</span>
+                <span class="menu-label">My Orders</span>
+              </a>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="menu-section">
+              <a href="#" class="menu-item" onclick="window.appManager.userManager.openSettings(event)">
+                <span class="menu-icon">📍</span>
+                <span class="menu-label">Addresses</span>
+              </a>
+              <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span class="menu-label">Preferences</span>
+              </a>
+            </div>
+            
+            <!-- Account Section -->
+            <div class="menu-section">
+              <a href="#" class="menu-item menu-item-danger" onclick="window.appManager.userManager.logout()">
+                <span class="menu-icon">🚪</span>
+                <span class="menu-label">Sign Out</span>
+              </a>
+            </div>
           </div>
         </div>
       `;
       userWidget.innerHTML = userMenuHTML;
+      
+      // Setup click-outside-to-close handler
+      this.setupMenuClickHandler();
     } else if (signInBtn) {
       // Button already exists, just make sure it's visible
       signInBtn.style.display = 'flex';
@@ -1135,6 +1182,34 @@ class UserManager {
         this.openAuth();
       });
     }
+  }
+
+  /**
+   * Setup click-outside handler for user menu
+   */
+  setupMenuClickHandler() {
+    // Remove existing listeners to avoid duplicates
+    if (this.menuClickListener) {
+      document.removeEventListener('click', this.menuClickListener);
+    }
+
+    this.menuClickListener = (event) => {
+      const wrapper = DOM.select('.user-widget-wrapper');
+      const dropdown = DOM.select('#userMenuDropdown');
+      
+      if (!wrapper || !dropdown) return;
+      
+      // If click is outside the wrapper, close the menu
+      if (!wrapper.contains(event.target)) {
+        dropdown.style.display = 'none';
+        const button = wrapper.querySelector('.user-widget-button');
+        if (button) {
+          button.setAttribute('aria-expanded', 'false');
+        }
+      }
+    };
+
+    document.addEventListener('click', this.menuClickListener);
   }
 
   /**
@@ -1239,6 +1314,9 @@ class UserManager {
   logout(event) {
     if (event) event.preventDefault();
     
+    // Close menu before logout
+    this.closeMenu();
+    
     if (window.AuthService && AuthService.signOut) {
       AuthService.signOut()
         .then(() => {
@@ -1268,8 +1346,16 @@ class UserManager {
    */
   toggleUserMenu() {
     const dropdown = DOM.select('#userMenuDropdown');
+    const button = DOM.select('.user-widget-button');
+    
     if (dropdown) {
-      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      const isHidden = dropdown.style.display === 'none';
+      dropdown.style.display = isHidden ? 'block' : 'none';
+      
+      // Update aria-expanded for accessibility
+      if (button) {
+        button.setAttribute('aria-expanded', isHidden);
+      }
     }
   }
 
@@ -1278,6 +1364,7 @@ class UserManager {
    */
   openProfile(event) {
     if (event) event.preventDefault();
+    this.closeMenu();
     window.appManager.modalManager.openModal('profileModal') || this.showProfilePage();
   }
 
@@ -1286,6 +1373,7 @@ class UserManager {
    */
   openOrders(event) {
     if (event) event.preventDefault();
+    this.closeMenu();
     window.appManager.modalManager.openModal('ordersModal') || this.showOrdersPage();
   }
 
@@ -1294,7 +1382,23 @@ class UserManager {
    */
   openSettings(event) {
     if (event) event.preventDefault();
+    this.closeMenu();
     window.appManager.modalManager.openModal('addressModal') || this.showAddressPage();
+  }
+
+  /**
+   * Close the user menu
+   */
+  closeMenu() {
+    const dropdown = DOM.select('#userMenuDropdown');
+    const button = DOM.select('.user-widget-button');
+    
+    if (dropdown) {
+      dropdown.style.display = 'none';
+      if (button) {
+        button.setAttribute('aria-expanded', 'false');
+      }
+    }
   }
 
   /**
