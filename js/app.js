@@ -745,7 +745,7 @@ class CartManager {
     try {
       console.log('Initiating Google Pay Send UPI payment for order:', order.id);
       
-      const upiRecipientId = document.getElementById('upiRecipientId')?.value || 'merchant@okaxis';
+      const upiRecipientId = document.getElementById('upiRecipientInput')?.value || 'merchant@okaxis';
       
       const upiModalHTML = `
         <div id="upiPaymentModal" class="modal">

@@ -1115,9 +1115,8 @@ const Templates = {
                 <p style="font-size: 0.85rem; color: var(--text-light); margin: 0 0 0.5rem 0;">
                   ℹ️ You'll see a QR code and UPI ID to send payment manually. Order will be confirmed after verification.
                 </p>
-                <input type="hidden" id="upiRecipientId" value="">
                 <p style="font-size: 0.75rem; color: var(--text-light);">Enter your UPI recipient ID (optional):</p>
-                <input type="text" id="upiRecipientId" placeholder="yourname@okhdfcbank" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.3rem; font-size: 0.85rem;">
+                <input type="text" id="upiRecipientInput" placeholder="yourname@okhdfcbank" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.3rem; font-size: 0.85rem;">
               </div>
             </div>
           </div>

@@ -1779,8 +1779,8 @@ nav {
     background: white;
     border-radius: var(--radius-lg);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    max-width: 500px;
-    width: 90%;
+    max-width: 1000px;
+    width: 95%;
     max-height: 90vh;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
@@ -1788,6 +1788,11 @@ nav {
 
 .modal-content.auth-modal-content {
     max-width: 400px;
+}
+
+.modal-content#checkoutModal {
+    max-width: 1100px;
+    width: 98%;
 }
 
 @keyframes slideUp {
@@ -4082,6 +4087,34 @@ footer {
 
     .upi-payment-actions {
         flex-direction: column;
+    }
+
+    /* Checkout responsive */
+    .modal-content#checkoutModal {
+        max-width: 98%;
+        width: 100%;
+    }
+
+    .checkout-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+
+    .checkout-container {
+        padding: var(--spacing-md);
+    }
+
+    .checkout-section {
+        padding-bottom: var(--spacing-md);
+    }
+
+    .payment-option {
+        padding: var(--spacing-sm);
+        font-size: 0.9rem;
+    }
+
+    .payment-option span {
+        font-size: 0.9rem;
     }
 
     .upi-payment-actions button {
