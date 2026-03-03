@@ -25,18 +25,13 @@ const CONFIG = {
         { label: 'Vision', href: '#vision' },
       ]
     },
-    { 
-      label: 'Products', 
+    {
+      label: 'Products',
       href: '#products',
       children: [
-        { 
-          label: 'Ojas Series',
-          children: [
-            { label: 'Ojas_0', href: '#ojas-0' },
-            { label: 'Ojas_1', href: '#ojas-1' },
-            { label: 'Ojas_2', href: '#ojas-2' },
-          ]
-        },
+        { label: 'Agni 512', href: '#products' },
+        { label: 'Agni 1024', href: '#products' },
+        { label: 'Agni 2048', href: '#products' },
       ]
     },
     { 
