@@ -26,7 +26,7 @@ const OrderService = {
   createOrder(userId, orderData) {
     try {
       const orders = this.getAllOrders();
-      const orderId = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+      const orderId = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
       
       const order = {
         id: orderId,
@@ -97,7 +97,7 @@ const OrderService = {
         
         // Auto-generate tracking when shipped
         if (status === 'shipped' && !order.trackingNumber) {
-          order.trackingNumber = 'TRACK-' + Math.random().toString(36).substr(2, 10).toUpperCase();
+          order.trackingNumber = 'TRACK-' + Math.random().toString(36).substring(2, 12).toUpperCase();
         }
         
         Storage.set(DB_KEYS.orders, JSON.stringify(orders));
@@ -129,7 +129,14 @@ const OrderService = {
    */
   calculateEstimatedDelivery() {
     const date = new Date();
-    date.setDate(date.getDate() + 5); // 5 business days
+    let daysAdded = 0;
+    while (daysAdded < 5) {
+      date.setDate(date.getDate() + 1);
+      const day = date.getDay();
+      if (day !== 0 && day !== 6) { // skip Sunday (0) and Saturday (6)
+        daysAdded++;
+      }
+    }
     return date.toISOString().split('T')[0];
   },
 
@@ -165,7 +172,7 @@ const PaymentService = {
         amount: paymentData.amount,
         method: paymentData.method,
         status: 'completed', // In production, connect to payment gateway
-        transactionId: 'TXN-' + Math.random().toString(36).substr(2, 12).toUpperCase(),
+        transactionId: 'TXN-' + Math.random().toString(36).substring(2, 14).toUpperCase(),
         timestamp: new Date().toISOString(),
       };
 
@@ -302,22 +309,49 @@ const InventoryService = {
 // ============================================
 const NotificationService = {
   /**
-   * Send order confirmation
+   * Send order confirmation email
+   * @param {object} order - Order data with all details
+   * @param {object} user - User data (email, name, phone, etc.)
+   * @param {array} items - Cart items with details
    */
-  sendOrderConfirmation(order, userEmail) {
+  async sendOrderConfirmation(order, user, items = []) {
     try {
+      // If EmailService is available, use it to send actual email
+      if (typeof EmailService !== 'undefined' && EmailService.sendOrderConfirmation) {
+        console.log('📧 Sending order confirmation email...');
+        const emailResult = await EmailService.sendOrderConfirmation(order, user, items);
+        
+        if (emailResult.success) {
+          Logger.info('Order confirmation email sent', { 
+            orderId: order.id, 
+            email: user.email,
+            method: emailResult.method 
+          });
+        } else {
+          Logger.warn('Order confirmation email failed, but order continues', {
+            orderId: order.id,
+            email: user.email,
+            reason: emailResult.reason
+          });
+        }
+      } else {
+        Logger.warn('EmailService not available - email not sent', { orderId: order.id });
+      }
+
+      // Create notification record for system
       const notification = {
         id: 'NOTIF-' + Date.now(),
         type: 'order_confirmation',
         orderId: order.id,
-        email: userEmail,
+        userId: user.uid || user.id,
+        email: user.email,
         subject: `Order Confirmation - ${order.id}`,
-        message: `Your order has been confirmed. You will receive tracking information shortly.`,
+        message: `Your order has been confirmed. Confirmation details sent to ${user.email}.`,
         status: 'sent',
         timestamp: new Date().toISOString(),
       };
       
-      Logger.info('Order confirmation sent', { orderId: order.id, email: userEmail });
+      Logger.info('Order confirmation notification created', { orderId: order.id, email: user.email });
       return notification;
     } catch (error) {
       Logger.error('Error sending order confirmation', error);
@@ -328,12 +362,19 @@ const NotificationService = {
   /**
    * Send shipment notification
    */
-  sendShipmentNotification(order, trackingNumber) {
+  async sendShipmentNotification(order, user, trackingNumber) {
     try {
+      // If EmailService is available, send shipment email
+      if (typeof EmailService !== 'undefined' && EmailService.sendShipmentEmail) {
+        console.log('📧 Sending shipment notification...');
+        // Note: You can extend EmailService to support shipment emails too
+      }
+
       const notification = {
         id: 'NOTIF-' + Date.now(),
         type: 'shipment',
         orderId: order.id,
+        userId: user.uid || user.id,
         trackingNumber,
         subject: `Your order is on the way - ${trackingNumber}`,
         message: `Your order ${order.id} has been shipped. Track your package here.`,

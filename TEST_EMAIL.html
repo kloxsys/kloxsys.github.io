@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klox Systems - Email Service Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section h2 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .console-output.log { color: #d4d4d4; }
+        .console-output.success { color: #4ec9b0; }
+        .console-output.error { color: #f48771; }
+        .console-output.warn { color: #dcdcaa; }
+        .config-display {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        .badge.enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge.disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 EmailJS Test</h1>
+        <p class="subtitle">Test order confirmation email sending</p>
+
+        <!-- Configuration Check -->
+        <div class="test-section">
+            <h2>1️⃣ Configuration Status</h2>
+            <button class="btn-secondary" onclick="checkEmailJSConfig()">Check Configuration</button>
+            <div id="configStatus" class="status"></div>
+            <div id="configDisplay" class="config-display" style="display: none;"></div>
+        </div>
+
+        <!-- Connection Test -->
+        <div class="test-section">
+            <h2>2️⃣ EmailJS Connection</h2>
+            <button class="btn-secondary" onclick="testEmailJSConnection()">Test Connection</button>
+            <div id="connectionStatus" class="status"></div>
+        </div>
+
+        <!-- Send Test Email -->
+        <div class="test-section">
+            <h2>3️⃣ Send Test Email</h2>
+            <div class="form-group">
+                <label for="testEmail">Recipient Email:</label>
+                <input type="email" id="testEmail" placeholder="your-email@example.com" value="">
+            </div>
+            <div class="form-group">
+                <label for="testName">Customer Name:</label>
+                <input type="text" id="testName" placeholder="John Doe" value="Test Customer">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="sendTestEmail()">📧 Send Test Email</button>
+                <button class="btn-secondary" onclick="clearConsole()">Clear Log</button>
+            </div>
+            <div id="sendStatus" class="status"></div>
+            <div id="console" class="console-output"></div>
+        </div>
+
+        <!-- Auto-Log Section -->
+        <div class="test-section">
+            <h2>📋 Auto-Capture Logs</h2>
+            <button class="btn-secondary" onclick="toggleAutoLog()">Enable Auto-Log</button>
+            <p style="color: #666; font-size: 13px; margin-top: 10px;">Open your browser console (F12) to see all details</p>
+        </div>
+
+        <!-- Debug Section -->
+        <div class="test-section">
+            <h2>🔍 Debug Info</h2>
+            <button class="btn-secondary" onclick="showDebugInfo()">Show Debug Info</button>
+            <button class="btn-secondary" onclick="viewStoredEmails()">View Stored Emails</button>
+            <button class="btn-secondary" onclick="clearStoredEmails()">Clear Stored Emails</button>
+            <div id="debugInfo" class="status"></div>
+            <div id="storedEmails" style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 6px; display: none;">
+                <h3>📧 Stored Test Emails</h3>
+                <div id="emailsList" style="max-height: 300px; overflow-y: auto; font-size: 12px; color: #333;"></div>
+            </div>
+        </div>
+    </div>
+
+    // Load all required scripts
+    <script src="config/data.js"></script>
+    <script src="js/email-loader.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script async src="https://cdn.emailjs.com/sdk/3.10.0/email.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/email.js"></script>
+    <script src="js/backend.js"></script>
+    <script src="js/utils.js"></script>
+
+    <script>
+        let autoLogEnabled = false;
+        let logMessages = [];
+
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addLog(message, type = 'log') {
+            logMessages.push({ message, type, time: new Date().toLocaleTimeString() });
+            const consoleEl = document.getElementById('console');
+            const logEl = document.createElement('div');
+            logEl.style.color = type === 'error' ? '#f48771' : type === 'warn' ? '#dcdcaa' : '#4ec9b0';
+            logEl.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleEl.appendChild(logEl);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (autoLogEnabled) addLog(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            if (autoLogEnabled) addLog(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            if (autoLogEnabled) addLog(args.join(' '), 'warn');
+        };
+
+        function clearConsole() {
+            logMessages = [];
+            document.getElementById('console').innerHTML = '';
+        }
+
+        function toggleAutoLog() {
+            autoLogEnabled = !autoLogEnabled;
+            document.querySelector('[onclick="toggleAutoLog()"]').textContent = 
+                autoLogEnabled ? '⏹️ Disable Auto-Log' : '▶️ Enable Auto-Log';
+            
+            const status = document.createElement('div');
+            status.className = 'status show ' + (autoLogEnabled ? 'success' : 'info');
+            status.textContent = autoLogEnabled ? '✓ Auto-log enabled' : '✓ Auto-log disabled';
+            setTimeout(() => status.remove(), 2000);
+        }
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `status show ${type}`;
+        }
+
+        async function checkEmailJSConfig() {
+            if (typeof EmailService === 'undefined') {
+                showStatus('configStatus', '❌ EmailService not loaded', 'error');
+                return;
+            }
+
+            const config = EmailService.config.emailjs;
+            const configDisplay = document.getElementById('configDisplay');
+            
+            configDisplay.style.display = 'block';
+            configDisplay.textContent = `EmailJS Configuration:
+Service ID: ${config.serviceId}
+Template ID: ${config.templateId}
+API Key: ${config.apiKey ? '✓ Set' : '✗ Not set'}
+Enabled: ${config.enabled ? '✓ Yes' : '✗ No'}
+
+EmailJS Library: ${typeof emailjs !== 'undefined' ? '✓ Loaded' : '✗ Not loaded'}`;
+
+            const badge = config.enabled ? '<span class="badge enabled">✓ READY</span>' : '<span class="badge disabled">✗ DISABLED</span>';
+            showStatus('configStatus', `Configuration check complete ${badge}`, 'success');
+        }
+
+        async function testEmailJSConnection() {
+            showStatus('connectionStatus', '⏳ Testing connection...', 'info');
+
+            if (typeof emailjs === 'undefined') {
+                showStatus('connectionStatus', '❌ EmailJS library not loaded. Check network tab.', 'error');
+                return;
+            }
+
+            if (typeof EmailService === 'undefined') {
+                showStatus('connectionStatus', '❌ EmailService not loaded', 'error');
+                return;
+            }
+
+            const config = EmailService.config.emailjs;
+            
+            if (!config.enabled) {
+                showStatus('connectionStatus', '❌ EmailJS is disabled in config', 'error');
+                return;
+            }
+
+            try {
+                emailjs.init(config.apiKey);
+                showStatus('connectionStatus', '✅ EmailJS initialized successfully', 'success');
+            } catch (error) {
+                showStatus('connectionStatus', `❌ Failed to initialize: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendTestEmail() {
+            const email = document.getElementById('testEmail').value.trim();
+            const name = document.getElementById('testName').value.trim() || 'Test Customer';
+
+            if (!email) {
+                showStatus('sendStatus', '❌ Please enter an email address', 'error');
+                return;
+            }
+
+            showStatus('sendStatus', '⏳ Sending test email...', 'info');
+            clearConsole();
+            addLog('Starting email send process...', 'log');
+
+            const testOrder = {
+                id: 'TEST-' + Date.now(),
+                items: [
+                    { name: 'Ojas Series Power Station', quantity: 1, price: 29999 },
+                    { name: 'Portable Solar Panel', quantity: 2, price: 5999 }
+                ],
+                subtotal: 41997,
+                tax: 7559.46,
+                shipping: 0,
+                total: 49556.46,
+                shippingAddress: {
+                    name: name,
+                    address1: '123 Test Street',
+                    address2: 'Apt 456',
+                    city: 'New Delhi',
+                    state: 'Delhi',
+                    postalCode: '110001',
+                    country: 'India',
+                    phone: '9876543210'
+                },
+                billingAddress: {
+                    name: name,
+                    address1: '123 Test Street',
+                    address2: 'Apt 456',
+                    city: 'New Delhi',
+                    state: 'Delhi',
+                    postalCode: '110001',
+                    country: 'India'
+                },
+                paymentMethod: 'razorpay',
+                paymentId: 'PAY_TEST_' + Math.random().toString(36).substr(2, 9),
+                status: 'processing',
+                createdAt: new Date().toISOString(),
+                estimatedDelivery: new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0]
+            };
+
+            const testUser = {
+                uid: 'test_user_' + Date.now(),
+                email: email,
+                displayName: name,
+                phone: '9876543210'
+            };
+
+            try {
+                addLog(`Order ID: ${testOrder.id}`, 'log');
+                addLog(`Recipient: ${email}`, 'log');
+                addLog('Calling EmailService.sendOrderConfirmation()...', 'log');
+
+                if (typeof EmailService === 'undefined') {
+                    throw new Error('EmailService not available');
+                }
+
+                const result = await EmailService.sendOrderConfirmation(testOrder, testUser, testOrder.items);
+
+                if (result.success) {
+                    addLog(`✅ Email sent successfully via ${result.method}!`, 'log');
+                    showStatus('sendStatus', `✅ Email sent successfully to ${email}`, 'success');
+                } else {
+                    addLog(`❌ Email send failed: ${result.reason || result.error}`, 'error');
+                    showStatus('sendStatus', `❌ Failed to send: ${result.reason || result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+                showStatus('sendStatus', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✓ Test page loaded');
+            console.log('EmailService available:', typeof EmailService !== 'undefined');
+            console.log('EmailJS library available:', typeof emailjs !== 'undefined');
+            
+            showEmailServiceStatus();
+            showStoredEmailsCount();
+        });
+
+        function showEmailServiceStatus() {
+            setTimeout(() => {
+                if (typeof EmailService !== 'undefined') {
+                    const config = EmailService.config;
+                    console.log('\n📧 EMAIL SERVICE STATUS:');
+                    console.log('  EmailJS enabled:', config.emailjs.enabled);
+                    console.log('  Firebase enabled:', config.firebaseCloudFunction.enabled);
+                    console.log('  Console Logging enabled:', config.consoleLogging.enabled);
+                    
+                    let method = 'NONE';
+                    if (config.emailjs.enabled && typeof emailjs !== 'undefined') {
+                        method = 'EMAILJS';
+                        console.log('  ✓ Primary: Using EMAILJS for email delivery');
+                    } else if (config.firebaseCloudFunction.enabled) {
+                        method = 'FIREBASE CLOUD FUNCTION';
+                        console.log('  ✓ Primary: Using FIREBASE CLOUD FUNCTION for email delivery');
+                    } else if (config.consoleLogging.enabled) {
+                        method = 'CONSOLE LOGGING (DEBUG MODE)';
+                        console.log('  ⚠️  Debug Mode: Emails will be logged to console and localStorage');
+                    } else {
+                        console.warn('  ⚠️  No email service enabled - emails will not be sent');
+                    }
+                    console.log('  Active Method: ' + method);
+                }
+            }, 2000);
+        }
+
+        function showStoredEmailsCount() {
+            setTimeout(() => {
+                const stored = localStorage.getItem('klox_sent_emails_debug');
+                if (stored) {
+                    try {
+                        const emails = JSON.parse(stored);
+                        if (emails.length > 0) {
+                            console.log(`\n📊 Stored Test Emails: ${emails.length}`);
+                            console.log('💡 View them by clicking "View Stored Emails" button in the debug section');
+                        }
+                    } catch (e) {
+                        // Silent fail
+                    }
+                }
+            }, 2000);
+        }
+
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            let info = '🔍 DEBUG INFORMATION:\n\n';
+            
+            // EmailJS Status
+            if (window.emailjs) {
+                info += '✅ EmailJS: Ready\n';
+            } else {
+                info += '⏳ EmailJS: Loading or Not Available\n';
+            }
+
+            // Firebase Status
+            if (window.firebase && window.firebase.functions) {
+                info += '✅ Firebase: Initialized\n';
+            } else {
+                info += '❌ Firebase: Not Available\n';
+            }
+
+            // Custom Backend Status
+            if (typeof EmailService !== 'undefined' && EmailService.config.customBackend.enabled) {
+                info += `✅ Custom Backend: ${EmailService.config.customBackend.apiEndpoint}\n`;
+            } else {
+                info += '❌ Custom Backend: Not Configured\n';
+            }
+
+            // Stored Emails
+            const stored = localStorage.getItem('klox_sent_emails_debug');
+            const emails = stored ? JSON.parse(stored) : [];
+            info += `\n📊 Console Log Statistics:\n`;
+            info += `   Total Logged: ${emails.length}\n`;
+            if (emails.length > 0) {
+                info += `   Latest: ${new Date(emails[emails.length - 1].timestamp).toLocaleTimeString()}\n`;
+            }
+
+            debugDiv.textContent = info;
+            debugDiv.style.whiteSpace = 'pre-wrap';
+            debugDiv.style.fontFamily = 'monospace';
+            debugDiv.style.fontSize = '12px';
+            debugDiv.style.color = '#333';
+            debugDiv.style.backgroundColor = '#f0f0f0';
+            debugDiv.style.padding = '10px';
+            debugDiv.style.borderRadius = '4px';
+        }
+
+        function viewStoredEmails() {
+            const stored = localStorage.getItem('klox_sent_emails_debug');
+            const emails = stored ? JSON.parse(stored) : [];
+            
+            const container = document.getElementById('storedEmails');
+            const list = document.getElementById('emailsList');
+            
+            if (emails.length === 0) {
+                list.innerHTML = '<p style="color: #999;">No emails stored yet. Send a test email first.</p>';
+                container.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            emails.forEach((email, index) => {
+                const date = new Date(email.timestamp).toLocaleString();
+                html += `
+                    <div style="margin-bottom: 15px; padding: 8px; background: white; border-left: 3px solid #0066cc;">
+                        <strong>#${index + 1}</strong> - ${date}
+                        <br><small style="color: #666;">To: ${email.to}</small>
+                        <br><small style="color: #666;">Subject: ${email.subject || '(No subject)'}</small>
+                        <button onclick="copyEmailToClipboard(${index})" style="margin-top: 5px; padding: 3px 8px; font-size: 11px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 3px;">Copy HTML</button>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        function copyEmailToClipboard(index) {
+            const stored = localStorage.getItem('klox_sent_emails_debug');
+            const emails = JSON.parse(stored);
+            const email = emails[index];
+            
+            navigator.clipboard.writeText(email.htmlContent || email.message).then(() => {
+                alert('✅ Email HTML copied to clipboard!');
+            }).catch(() => {
+                alert('❌ Failed to copy');
+            });
+        }
+
+        function clearStoredEmails() {
+            if (confirm('Clear all stored emails from localStorage?')) {
+                localStorage.removeItem('klox_sent_emails_debug');
+                document.getElementById('storedEmails').style.display = 'none';
+                document.getElementById('emailsList').innerHTML = '';
+                console.log('🗑️ Stored emails cleared');
+                alert('✅ Cleared!');
+            }
+        }
+    </script>
+</body>
+</html>

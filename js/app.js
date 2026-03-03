@@ -218,7 +218,8 @@ class PreOrderManager {
     DOM.select('#customerEmail').value = '';
     DOM.select('#customerPhone').value = '';
     DOM.select('#customerAddress').value = '';
-    document.querySelector('input[name="payment"]').checked = true;
+    const firstPayment = document.querySelector('input[name="payment"]');
+    if (firstPayment) firstPayment.checked = true;
   }
 }
 
@@ -689,7 +690,7 @@ class CartManager {
       }
 
       // Create order
-      const order = OrderService.createOrder(user.id, {
+      const order = OrderService.createOrder(user.uid, {
         items: checkout.items,
         subtotal: checkout.subtotal,
         tax,
@@ -777,8 +778,8 @@ class CartManager {
                   <div class="upi-manual-section">
                     <p class="upi-instruction">Send ₹${total.toFixed(2)} to UPI ID:</p>
                     <div class="upi-id-display">
-                      <input type="text" value="${upiRecipientId}" readonly class="upi-id-input">
-                      <button class="upi-copy-btn" onclick="navigator.clipboard.writeText('${upiRecipientId}');alert('UPI ID copied!')">Copy</button>
+                      <input type="text" id="upiIdDisplay" readonly class="upi-id-input">
+                      <button class="upi-copy-btn" id="upiCopyBtn">Copy</button>
                     </div>
                     <p class="upi-note"><strong>Reference:</strong> ${order.id}</p>
                   </div>
@@ -794,7 +795,7 @@ class CartManager {
                   </div>
                 </div>
                 <div class="upi-payment-actions">
-                  <button class="upi-confirm-btn" onclick="alert('Payment confirmed. Order will be processed within 2-3 minutes');">✓ Confirm Payment Sent</button>
+                  <button class="upi-confirm-btn" id="upiConfirmBtn">✓ Confirm Payment Sent</button>
                   <button class="upi-cancel-btn" onclick="window.appManager.modalManager.closeModal('upiPaymentModal')">Cancel</button>
                 </div>
               </div>
@@ -804,12 +805,22 @@ class CartManager {
       `;
 
       document.body.insertAdjacentHTML('beforeend', upiModalHTML);
-      window.appManager.modalManager.openModal('upiPaymentModal');
 
-      // After user confirms, complete the order
-      setTimeout(() => {
+      // Set UPI ID value safely via DOM property (avoids XSS via string interpolation)
+      document.getElementById('upiIdDisplay').value = upiRecipientId;
+
+      // Wire copy button safely via addEventListener
+      document.getElementById('upiCopyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(upiRecipientId).then(() => alert('UPI ID copied!'));
+      });
+
+      // Confirm button only completes the order when the user explicitly clicks it
+      document.getElementById('upiConfirmBtn').addEventListener('click', () => {
+        window.appManager.modalManager.closeModal('upiPaymentModal');
         this.completeOrder(order, user, total, 'google-pay-send', { orderId: order.id });
-      }, 2000);
+      });
+
+      window.appManager.modalManager.openModal('upiPaymentModal');
 
     } catch (error) {
       Logger.error('Google Pay Send error', error);
@@ -825,8 +836,21 @@ class CartManager {
       // Update order status
       OrderService.updateOrderStatus(order.id, 'processing');
 
-      // Send confirmation
-      NotificationService.sendOrderConfirmation(order, user.email);
+      // Store payment details in order
+      order.paymentMethod = paymentMethod;
+      order.paymentId = paymentData?.razorpay_payment_id || paymentData?.orderId;
+
+      // Prepare items for email
+      const items = this.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      // Send confirmation email with all details
+      if (typeof NotificationService !== 'undefined' && NotificationService.sendOrderConfirmation) {
+        NotificationService.sendOrderConfirmation(order, user, items);
+      }
 
       // Clear cart
       this.items = [];
@@ -890,8 +914,11 @@ class DashboardManager {
 
       this.currentUser = user;
       const modal = DOM.select('#dashboardModal');
-      
-      if (!modal) {
+
+      if (modal) {
+        // Refresh body content so user-specific template data is always current
+        modal.querySelector('.modal-body').innerHTML = Templates.dashboard(user);
+      } else {
         const dashboardModal = `
           <div id="dashboardModal" class="modal">
             <div class="modal-content dashboard-modal">

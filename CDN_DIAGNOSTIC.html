@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailJS Diagnostic - Klox Systems</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #ddd;
+        }
+        .test-item.pending {
+            background: #ffeaa7;
+            border-left-color: #fdcb6e;
+        }
+        .test-item.success {
+            background: #d4edda;
+            border-left-color: #4caf50;
+        }
+        .test-item.error {
+            background: #f8d7da;
+            border-left-color: #f85032;
+        }
+        .test-item.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button.secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            min-height: 150px;
+        }
+        .solution-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .solution-box h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        .solution-box ol {
+            margin-left: 20px;
+            color: #333;
+        }
+        .solution-box li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 EmailJS Diagnostic Tool</h1>
+
+        <div class="row">
+            <div class="card">
+                <h2>CDN Status</h2>
+                <div id="cdnStatus"></div>
+                <button onclick="testCDN()">Test CDN Load</button>
+            </div>
+
+            <div class="card">
+                <h2>Network Requests</h2>
+                <div id="networkStatus"></div>
+                <button onclick="checkNetwork()">Check Network</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="card">
+                <h2>Configuration</h2>
+                <div id="configStatus"></div>
+            </div>
+
+            <div class="card">
+                <h2>Solutions</h2>
+                <div id="solutions"></div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2>📋 Detailed Logs</h2>
+            <textarea id="logs" readonly></textarea>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+
+        <div class="card full-width">
+            <h2>🔧 Quick Actions</h2>
+            <button onclick="loadEmailJSDirectly()">Load EmailJS Directly</button>
+            <button onclick="switchToFirebase()">Switch to Firebase Cloud Function</button>
+            <button onclick="testWithoutEmailJS()">Test Without EmailJS</button>
+            <button onclick="location.reload()">Reload Page</button>
+        </div>
+    </div>
+
+    <script>
+        const logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const fullMessage = `[${timestamp}] ${message}`;
+            logs.push(fullMessage);
+            
+            const logsEl = document.getElementById('logs');
+            logsEl.value = logs.join('\n');
+            logsEl.scrollTop = logsEl.scrollHeight;
+            
+            console.log(message);
+        }
+
+        function clearLogs() {
+            logs.length = 0;
+            document.getElementById('logs').value = '';
+        }
+
+        function showStatus(containerId, html) {
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        async function testCDN() {
+            log('Testing EmailJS CDN...');
+            
+            const cdns = [
+                {
+                    name: 'Primary CDN (emailjs.com)',
+                    url: 'https://cdn.emailjs.com/sdk/3.10.0/email.min.js'
+                },
+                {
+                    name: 'Fallback CDN (jsdelivr)',
+                    url: 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js'
+                },
+                {
+                    name: 'Alternative CDN (unpkg)',
+                    url: 'https://unpkg.com/@emailjs/browser@3.10.0/dist/email.min.js'
+                }
+            ];
+
+            let html = '';
+            for (const cdn of cdns) {
+                log(`Testing ${cdn.name}...`);
+                try {
+                    const response = await fetch(cdn.url, { method: 'HEAD', mode: 'no-cors' });
+                    const status = response.ok || response.status === 0 ? 'success' : 'error';
+                    html += `<div class="test-item ${status}">
+                        ${status === 'success' ? '✓' : '✗'} ${cdn.name}
+                        <br><code>${cdn.url}</code>
+                    </div>`;
+                    log(`${cdn.name}: ${status}`);
+                } catch (error) {
+                    html += `<div class="test-item error">
+                        ✗ ${cdn.name} - ${error.message}
+                        <br><code>${cdn.url}</code>
+                    </div>`;
+                    log(`${cdn.name}: ERROR - ${error.message}`);
+                }
+            }
+
+            showStatus('cdnStatus', html);
+
+            // Check if EmailJS is loaded
+            setTimeout(() => {
+                if (typeof emailjs !== 'undefined') {
+                    log('✓ EmailJS library successfully loaded!');
+                    alert('✓ EmailJS loaded successfully!');
+                } else {
+                    log('✗ EmailJS library still not loaded after tests');
+                }
+            }, 1000);
+        }
+
+        function checkNetwork() {
+            log('Checking network resources...');
+            
+            if (typeof fetch === 'undefined') {
+                log('✗ Fetch API not available');
+                showStatus('networkStatus', '<div class="test-item error">✗ Fetch API not available</div>');
+                return;
+            }
+
+            let html = '<div class="test-item pending">⏳ Testing connectivity...</div>';
+            showStatus('networkStatus', html);
+
+            Promise.all([
+                fetch('https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png', { mode: 'no-cors' }).catch(() => false),
+                fetch('https://cdn.emailjs.com/sdk/3.10.0/email.min.js', { mode: 'no-cors' }).catch(() => false)
+            ]).then(results => {
+                html = `
+                    <div class="test-item ${results[0] ? 'success' : 'error'}">
+                        ${results[0] ? '✓' : '✗'} General Internet
+                    </div>
+                    <div class="test-item ${results[1] ? 'success' : 'error'}">
+                        ${results[1] ? '✓' : '✗'} EmailJS CDN
+                    </div>
+                `;
+                showStatus('networkStatus', html);
+                log('Network check complete');
+            });
+        }
+
+        function showConfig() {
+            let html = '';
+            
+            if (typeof CONFIG !== 'undefined' && CONFIG.emailjs) {
+                const config = CONFIG.emailjs || {};
+                html = `
+                    <div class="test-item success">
+                        <strong>Service ID:</strong> ${config.serviceId || 'Not set'}
+                        <br><strong>Template ID:</strong> ${config.templateId || 'Not set'}
+                        <br><strong>Enabled:</strong> ${config.enabled ? '✓ Yes' : '✗ No'}
+                    </div>
+                `;
+            } else {
+                html = '<div class="test-item error">CONFIG not loaded</div>';
+            }
+
+            // Check if EmailJS is available
+            if (typeof emailjs !== 'undefined') {
+                html += '<div class="test-item success">✓ EmailJS library loaded</div>';
+            } else {
+                html += '<div class="test-item error">✗ EmailJS library not loaded</div>';
+            }
+
+            showStatus('configStatus', html);
+        }
+
+        function showSolutions() {
+            let html = '';
+
+            if (typeof emailjs === 'undefined') {
+                html = `
+                    <div class="solution-box">
+                        <h3>⚠️ EmailJS Not Loaded</h3>
+                        <p>The EmailJS CDN is not loading. Try these solutions:</p>
+                        <ol>
+                            <li><strong>Reload Page:</strong> Sometimes it's a timing issue</li>
+                            <li><strong>Load Directly:</strong> Click "Load EmailJS Directly" button</li>
+                            <li><strong>Switch Method:</strong> Use Firebase Cloud Function instead</li>
+                            <li><strong>Check Firewall:</strong> Your network might be blocking CDNs</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="solution-box">
+                        <h3>✓ EmailJS Ready</h3>
+                        <p>EmailJS is loaded and ready to send emails!</p>
+                    </div>
+                `;
+            }
+
+            showStatus('solutions', html);
+        }
+
+        async function loadEmailJSDirectly() {
+            log('Attempting to load EmailJS directly...');
+            
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://unpkg.com/@emailjs/browser@3.10.0/dist/email.min.js';
+            
+            script.onload = function() {
+                log('✓ EmailJS loaded from unpkg CDN!');
+                if (typeof EmailService !== 'undefined') {
+                    EmailService.initEmailJS();
+                }
+                showConfig();
+                showSolutions();
+                alert('✓ EmailJS loaded successfully!');
+            };
+            
+            script.onerror = function() {
+                log('✗ Failed to load a working EmailJS CDN');
+                alert('All CDNs are unreachable. Please check your network connection.');
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function switchToFirebase() {
+            log('Switching to Firebase Cloud Function...');
+            
+            if (typeof EmailService !== 'undefined') {
+                EmailService.config.emailjs.enabled = false;
+                EmailService.config.firebaseCloudFunction.enabled = true;
+                
+                log('✓ Switched to Firebase Cloud Function');
+                log('Firebase URL: ' + EmailService.config.firebaseCloudFunction.url);
+                alert('✓ Switched to Firebase Cloud Function!\n\nNext emails will use Firebase instead of EmailJS.');
+            }
+        }
+
+        function testWithoutEmailJS() {
+            log('Testing email service without EmailJS...');
+            
+            if (typeof EmailService === 'undefined') {
+                log('✗ EmailService not loaded');
+                alert('EmailService not available');
+                return;
+            }
+
+            // Disable all methods
+            EmailService.config.emailjs.enabled = false;
+            EmailService.config.firebaseCloudFunction.enabled = false;
+            EmailService.config.customBackend.enabled = false;
+            
+            log('⚠️  All email methods disabled - this is a test only');
+            alert('All email methods disabled. This was a test.');
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Diagnostic tool loaded');
+            
+            // Check CONFIG
+            if (typeof CONFIG !== 'undefined') {
+                log('✓ CONFIG loaded');
+            } else {
+                log('✗ CONFIG not loaded - loading it now...');
+                // CONFIG will be loaded via script tag
+            }
+
+            // Run initial checks after a delay
+            setTimeout(() => {
+                showConfig();
+                showSolutions();
+                log('Initial diagnostics complete');
+            }, 2000);
+        });
+
+        // Monitor EmailJS loading
+        const checkInterval = setInterval(() => {
+            if (typeof emailjs !== 'undefined') {
+                clearInterval(checkInterval);
+                log('📧 EmailJS library is now available!');
+                showConfig();
+                showSolutions();
+            }
+        }, 500);
+
+        setTimeout(() => clearInterval(checkInterval), 15000); // Stop checking after 15 seconds
+    </script>
+
+    <!-- Load configuration first -->
+    <script src="config/data.js"></script>
+
+    <!-- Try all EmailJS CDNs -->
+    <script src="https://cdn.emailjs.com/sdk/3.10.0/email.min.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js" async defer></script>
+    <script src="https://unpkg.com/@emailjs/browser@3.10.0/dist/email.min.js" async defer onerror="log('unpkg CDN failed')"></script>
+
+    <!-- Load services -->
+    <script src="js/email.js" async defer></script>
+</body>
+</html>

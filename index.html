@@ -12,8 +12,6 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="css/styles.css">
     
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
 </head>
 <body>
     <!-- ============================================
@@ -149,13 +147,6 @@
     </section>
 
     <!-- ============================================
-         USER ACCOUNT SECTION
-         ============================================ -->
-    <section class="user-account" id="userAccount">
-        <div id="userAccountWidget"></div>
-    </section>
-
-    <!-- ============================================
          STORE SECTION
          ============================================ -->
     <section class="store" id="store">
@@ -276,8 +267,12 @@
     <!-- ============================================
          EXTERNAL SCRIPTS (Load in order)
          ============================================ -->
-    <!-- Configuration & Data -->
+    
+    <!-- Configuration & Data (MUST load first) -->
     <script src="config/data.js"></script>
+
+    <!-- Email Service Loader (tries CDNs sequentially with fallback) -->
+    <script src="js/email-loader.js"></script>
     
     <!-- Firebase SDK (Auth + Firestore, compat build for simplicity) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -285,11 +280,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- Razorpay Payment Gateway (Test Mode) -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script defer src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- Auth & DB Services (wrap Firebase) -->
     <script src="js/auth.js"></script>
     <script src="js/db.js"></script>
+    
+    <!-- Email Service (Order Confirmations) -->
+    <script src="js/email.js"></script>
     
     <!-- Backend Services -->
     <script src="js/backend.js"></script>
@@ -299,6 +297,9 @@
     
     <!-- Utility Functions -->
     <script src="js/utils.js"></script>
+    
+    <!-- Application Refresh & Reset -->
+    <script src="js/refresh.js"></script>
     
     <!-- Component Templates -->
     <script src="js/templates.js"></script>
