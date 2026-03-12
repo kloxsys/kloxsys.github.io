@@ -143,6 +143,35 @@ function renderNavigation() {
   navLinks.innerHTML = CONFIG.navigation
     .map(item => Templates.navLink(item))
     .join('');
+
+  // Hamburger menu toggle
+  const hamburger = DOM.select('#navHamburger');
+  const nav = hamburger && hamburger.closest('nav');
+  if (hamburger && nav) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('nav-open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Close menu when a nav link is clicked
+    navLinks.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A') {
+        nav.classList.remove('nav-open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!nav.contains(e.target)) {
+        nav.classList.remove('nav-open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 }
 
 /**
