@@ -641,28 +641,23 @@ class CartManager {
         return;
       }
       
-      // Get payment method with proper validation
-      const paymentRadios = document.querySelectorAll('input[name="payment"]');
-      console.log('Found payment radio buttons:', paymentRadios.length);
-      
+      // Get payment method scoped to checkout modal only (avoids collision with pre-order form radios)
+      const checkoutModal = document.getElementById('checkoutModal');
+      const paymentScope = checkoutModal || document;
+      const paymentRadios = paymentScope.querySelectorAll('input[name="payment"]');
+
       let paymentMethod = null;
-      for (let radio of paymentRadios) {
-        console.log('Radio button:', { value: radio.value, checked: radio.checked });
+      for (const radio of paymentRadios) {
         if (radio.checked) {
           paymentMethod = radio.value;
           break;
         }
       }
-      
-      console.log('Selected payment method:', paymentMethod);
-      
-      // If no payment method found, try to use razorpay as default
+
       if (!paymentMethod) {
-        console.warn('No payment method found, defaulting to razorpay');
         paymentMethod = 'razorpay';
       }
-      
-      // Validate payment method
+
       if (paymentMethod !== 'razorpay' && paymentMethod !== 'upi-manual') {
         alert('Invalid payment method. Please select Razorpay or Google Pay Send.');
         return;

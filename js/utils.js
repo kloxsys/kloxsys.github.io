@@ -139,6 +139,23 @@ const Validation = {
   },
 };
 
+// Escapes HTML special characters to prevent XSS in innerHTML interpolation
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Validates a URL is safe for use in href (blocks javascript: and data: URIs)
+function safeHref(url) {
+  const s = String(url).trim().toLowerCase();
+  if (s.startsWith('javascript:') || s.startsWith('data:')) return '#';
+  return url;
+}
+
 // Format Helpers
 const Format = {
   /**

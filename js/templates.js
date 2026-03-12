@@ -112,11 +112,11 @@ const Templates = {
         if (child.children && child.children.length > 0) {
           // Nested submenu (3-level)
           const nestedChildren = child.children
-            .map(nested => `<li><a href="${nested.href}">${nested.label}</a></li>`)
+            .map(nested => `<li><a href="${safeHref(nested.href)}">${escapeHtml(nested.label)}</a></li>`)
             .join('');
           return `
             <li class="nav-submenu-parent">
-              <span class="nav-submenu-title">${child.label}</span>
+              <span class="nav-submenu-title">${escapeHtml(child.label)}</span>
               <ul class="nav-submenu-nested">
                 ${nestedChildren}
               </ul>
@@ -124,13 +124,13 @@ const Templates = {
           `;
         } else {
           // Regular submenu item
-          return `<li><a href="${child.href}">${child.label}</a></li>`;
+          return `<li><a href="${safeHref(child.href)}">${escapeHtml(child.label)}</a></li>`;
         }
       }).join('');
 
       return `
         <li class="nav-item-parent">
-          <a href="${navItem.href}" class="nav-parent-link">${navItem.label}</a>
+          <a href="${safeHref(navItem.href)}" class="nav-parent-link">${escapeHtml(navItem.label)}</a>
           <ul class="nav-dropdown">
             ${childrenHTML}
           </ul>
@@ -138,7 +138,7 @@ const Templates = {
       `;
     } else {
       // Simple menu item without children
-      return `<li><a href="${navItem.href}">${navItem.label}</a></li>`;
+      return `<li><a href="${safeHref(navItem.href)}">${escapeHtml(navItem.label)}</a></li>`;
     }
   },
 
