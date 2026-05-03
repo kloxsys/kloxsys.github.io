@@ -1493,8 +1493,9 @@ nav {
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 420px));
     gap: var(--spacing-lg);
+    justify-content: center;
 }
 
 .product-card {
