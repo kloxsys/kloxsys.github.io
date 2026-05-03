@@ -205,6 +205,7 @@ function renderProducts() {
   if (!productGrid) return;
 
   productGrid.innerHTML = CONFIG.products
+    .filter(product => !product.hidden)
     .map(product => Templates.productCard(product))
     .join('');
 }

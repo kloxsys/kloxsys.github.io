@@ -30,8 +30,6 @@ const CONFIG = {
       href: '#products',
       children: [
         { label: 'Agni 512', href: '#products' },
-        { label: 'Agni 1024', href: '#products' },
-        { label: 'Agni 2048', href: '#products' },
       ]
     },
     { 
@@ -115,6 +113,7 @@ const CONFIG = {
     {
       id: 'agni-1024',
       name: 'Agni 1024',
+      hidden: true,
       capacity: '1024Wh',
       description: 'For home backup and professional use. 1024Wh capacity, pure sine wave.',
       price: 49999,
@@ -130,6 +129,7 @@ const CONFIG = {
     {
       id: 'agni-2048',
       name: 'Agni 2048',
+      hidden: true,
       capacity: '2048Wh',
       description: 'Maximum power for all needs. 2048Wh capacity, expandable battery.',
       price: 89999,
@@ -681,19 +681,19 @@ const CONFIG = {
     accessories: [
       {
         name: 'Solar Panel 100W',
-        price: 12999,
+        price: 2999,
         description: 'Portable solar panel for efficient charging',
         icon: '☀️',
       },
       {
         name: 'Car Charger',
-        price: 2999,
+        price: 999,
         description: '12V car charging cable and adapter',
         icon: '🚗',
       },
       {
         name: 'Carrying Case',
-        price: 4999,
+        price: 999,
         description: 'Protective carrying case for safe transport',
         icon: '🎒',
       },
